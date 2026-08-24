@@ -24,6 +24,36 @@ rolling back both.
 `GITHUB_TOKEN` must be a Cloudflare Worker secret, never a Wrangler plaintext variable or a
 committed `.dev.vars` value; the plugin detail endpoint uses it to read repository metadata.
 
+## Staging worker (pre-release twin)
+
+A staging Worker (`dsh-1024store`) can be bound to this repository's `main` via Cloudflare
+Workers Builds. It deploys the exact same bundle against the SAME production D1/KV, and
+differs from production only in Worker name and the absence of `routes` (it serves from
+workers.dev). Build command:
+
+```
+npm ci && npm run build --workspace @dsh-1024store/web && node apps/web/scripts/make-staging-deploy-config.mjs
+```
+
+Deploy command:
+
+```
+npx wrangler deploy --config apps/web/dist/dsh_store/wrangler.staging.json
+```
+
+Notes:
+
+- Staging shares production data: install events, community writes, and quota counters
+  from staging land in the production D1. `POST /api/v1/catalog/sync` on staging rebuilds
+  the shared KV snapshot (idempotent, same data).
+- Copy the production secret values onto the staging Worker (`wrangler secret put … --name
+  dsh-1024store`) so hashing and sync behave identically. GitHub OAuth login needs its own
+  OAuth App (the callback URL is origin-derived), so it stays unconfigured on staging
+  unless deliberately set up.
+- The LiveStats Durable Object is per-Worker, so staging keeps its own live counters.
+- Production (`dsh-store`) still deploys ONLY via the manual runbook above; never point a
+  Builds deploy command at the production config.
+
 ## Cross-repo contracts
 
 The plugin catalog data is maintained in
