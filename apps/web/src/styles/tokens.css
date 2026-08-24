@@ -1,0 +1,228 @@
+/* ============================================================================
+   设计令牌 —— 全站颜色 / 阴影 / 圆角 / 动效的唯一来源
+
+   改主题只动这个文件。styles.css 及任何组件里都不允许再出现字面色值
+   （#hex / rgb() / rgba()），一律通过 var() 引用下面的语义令牌。
+
+   分两层：
+     1. 原始色板 (primitives)  以 --p- 开头，只是色阶，不带含义
+     2. 语义令牌 (semantic)    按用途命名，组件只用这一层
+
+   换配色时优先改第 1 层的色阶；只有当某个用途需要脱离色阶时才动第 2 层。
+   ========================================================================= */
+
+:root {
+  /* ==========================================================================
+     1. 原始色板
+     ====================================================================== */
+
+  /* -- 中性色：带极轻微冷偏（hue ≈ 230，饱和度 <5%），不是纯灰 -------------- */
+  --p-neutral-0: #ffffff;
+  --p-neutral-25: #fbfbfd;
+  --p-neutral-50: #f6f6f9;
+  --p-neutral-100: #efeff4;
+  --p-neutral-200: #e8e9ee;
+  --p-neutral-300: #d5d7e0;
+  --p-neutral-400: #b4b7c3;
+  --p-neutral-500: #9296a1;
+  --p-neutral-600: #747884;
+  --p-neutral-700: #5e626d;
+  --p-neutral-800: #3a3d46;
+  --p-neutral-900: #16181d;
+
+  /* -- 品牌蓝：全站统一到 #3f60f6（历史上 #3f60f6 与 #4d6bfe 混用过） ------- */
+  --p-brand-50: #eef1ff;
+  --p-brand-100: #dde3ff;
+  --p-brand-200: #c2ccff;
+  --p-brand-300: #93a5fb;
+  --p-brand-400: #6b83f8;
+  --p-brand-500: #3f60f6;
+  --p-brand-600: #2f4de0;
+  --p-brand-700: #2844c5;
+  --p-brand-900: #10266f;
+  --p-brand-rgb: 63 96 246; /* 空格分隔，见 --shadow-rgb 说明 */
+
+  /* -- 渐变点缀：纯白极简方案的差异化来源，只用在细线和强调descriptor上 ----- */
+  --p-violet-500: #8b5cf6;
+  --p-pink-500: #ec4899;
+
+  /* -- 功能色 ------------------------------------------------------------- */
+  --p-teal-500: #0d9aa2;
+  --p-teal-700: #12705f;
+  --p-teal-100: #d3efe8;
+  --p-teal-50: #f2fbf8;
+  --p-teal-rgb: 13 154 162;
+
+  --p-amber-500: #e8850f;
+  --p-amber-700: #8a5a0b;
+  --p-amber-100: #f2d9a8;
+  --p-amber-50: #fff8ec;
+
+  --p-rose-500: #e2445f;
+  --p-rose-700: #8f2f42;
+  --p-rose-100: #f3c9d1;
+  --p-rose-50: #fef4f6;
+
+  /* -- 代码深底：终端 / 安装命令 / markdown pre --------------------------- */
+  --p-code-900: #12151d;
+  --p-code-800: #1b2130;
+  --p-code-700: #242a38;
+  --p-code-100: #eef1f8;
+  --p-mint-400: #5ee0d7;
+
+  /* ==========================================================================
+     2. 语义令牌
+     ====================================================================== */
+
+  /* -- 表面 --------------------------------------------------------------- */
+  --canvas: var(--p-neutral-25);          /* 页面画布底 */
+  --surface: var(--p-neutral-0);          /* 卡片 / 列表 / 面板 */
+  --surface-muted: var(--p-neutral-50);   /* 分段控件槽、tag 底、行内代码 */
+  --surface-sunken: var(--p-neutral-100); /* 占位块、统计格 */
+  --surface-hover: var(--p-neutral-50);   /* 次级按钮 hover */
+  --surface-translucent: rgb(255 255 255 / 78%); /* 压在 hero 网格上的控件 */
+
+  /* -- hero 区：比正文画布更白，靠一条描边分层 ---------------------------- */
+  --hero-canvas: var(--p-neutral-0);
+  --hero-grid: rgb(20 22 30 / 2.8%);
+  --hero-panel-grid: rgb(20 22 30 / 4%);
+
+  /* hero 上的几何装饰：描边方块 + 偏移回声块。属于图形，不是层级阴影，
+     所以不走 --shadow-*，单独给令牌，想去掉直接设成 transparent。 */
+  --hero-ornament: rgb(var(--p-brand-rgb) / 3.5%);
+  --hero-ornament-echo: rgb(var(--p-brand-rgb) / 10%);
+  --logo-shadow: rgb(var(--shadow-rgb) / 10%);
+
+  /* -- 描边 --------------------------------------------------------------- */
+  --line: var(--p-neutral-200);
+  --line-strong: var(--p-neutral-300);
+
+  /* -- 文字 --------------------------------------------------------------- */
+  --ink: var(--p-neutral-900);      /* 标题、正文强调 */
+  --muted: var(--p-neutral-700);    /* 正文、说明 */
+  --subtle: var(--p-neutral-500);   /* 次级标签、计数 */
+  --faint: var(--p-neutral-400);    /* 序号、owner、placeholder */
+  --on-brand: var(--p-neutral-0);   /* 品牌底上的字 */
+  --on-ink: var(--p-neutral-0);     /* 墨色底上的字 */
+  --on-brand-wash: rgb(255 255 255 / 20%); /* 品牌底上的计数徽标 */
+
+  /* -- 品牌 --------------------------------------------------------------- */
+  --brand: var(--p-brand-500);
+  --brand-dark: var(--p-brand-700);
+  --brand-soft: var(--p-brand-50);
+  --brand-border: var(--p-brand-200);
+  --brand-underline: var(--p-brand-300);
+  --brand-quote: var(--p-brand-300);
+  --brand-wash: rgb(var(--p-brand-rgb) / 4.5%);  /* 行 hover 底 */
+
+  /* -- 渐变：面板顶饰线、强调分隔 ----------------------------------------- */
+  --gradient-brand: linear-gradient(
+    90deg,
+    var(--p-brand-500),
+    var(--p-violet-500),
+    var(--p-pink-500)
+  );
+
+  /* -- 分类点 / 指标色：分类圆点、star、增长、安装数 ------------------------ */
+  --accent-teal: var(--p-teal-500);
+  --accent-gold: var(--p-amber-500);
+  --accent-coral: var(--p-rose-500);
+
+  /* -- 状态 --------------------------------------------------------------- */
+  --live-idle: var(--p-neutral-400);
+  --live-ring: rgb(var(--p-teal-rgb) / 14%);
+  --live-pulse: rgb(var(--p-teal-rgb) / 50%);
+
+  --success-bg: var(--p-teal-50);
+  --success-line: var(--p-teal-100);
+  --success-ink: var(--p-teal-700);
+
+  --warning-bg: var(--p-amber-50);
+  --warning-line: var(--p-amber-100);
+  --warning-ink: var(--p-amber-700);
+
+  --danger-bg: var(--p-rose-50);
+  --danger-line: var(--p-rose-100);
+  --danger-ink: var(--p-rose-700);
+
+  /* 榜首奖牌 */
+  --medal-bg: var(--p-amber-50);
+  --medal-line: var(--p-amber-100);
+  --medal-ink: var(--p-amber-700);
+  --podium-bg: var(--p-neutral-25);
+  --podium-line: var(--p-brand-200);
+
+  /* -- 代码 --------------------------------------------------------------- */
+  --code-bg: var(--p-code-900);
+  --code-ink: var(--p-code-100);
+  --code-line: var(--p-code-700);
+  --code-divider: var(--p-code-800);
+  --code-prompt: var(--p-mint-400);
+  --code-inline-bg: var(--surface-muted);
+  --code-inline-ink: var(--p-neutral-800);
+
+  /* -- 选中 --------------------------------------------------------------- */
+  --selection-bg: var(--p-brand-100);
+  --selection-ink: var(--p-brand-900);
+
+  /* ==========================================================================
+     3. 阴影 —— 「环形 + 浮起」
+        静态几乎无感（1px 半透明环 + 一层很紧的低透明度阴影），
+        只有 hover / focus 才浮起来并染上品牌色。
+        换阴影语言时改这一组即可，组件不感知具体数值。
+     ====================================================================== */
+  /* 空格分隔：供 rgb(<triplet> / <alpha>) 用，写成逗号会让整条声明失效 */
+  --shadow-rgb: 18 20 30;
+
+  --shadow-xs:
+    0 0 0 1px rgb(var(--shadow-rgb) / 5%),
+    0 1px 2px rgb(var(--shadow-rgb) / 5%);
+  --shadow-sm:
+    0 0 0 1px rgb(var(--shadow-rgb) / 5%),
+    0 1px 2px rgb(var(--shadow-rgb) / 5%),
+    0 2px 6px rgb(var(--shadow-rgb) / 4%);
+  --shadow-md:
+    0 0 0 1px rgb(var(--shadow-rgb) / 5%),
+    0 1px 2px rgb(var(--shadow-rgb) / 5%),
+    0 4px 12px rgb(var(--shadow-rgb) / 4.5%);
+  --shadow-lg:
+    0 0 0 1px rgb(var(--shadow-rgb) / 6%),
+    0 2px 4px rgb(var(--shadow-rgb) / 5%),
+    0 10px 26px rgb(var(--shadow-rgb) / 7%);
+
+  --shadow-hover:
+    0 0 0 1px rgb(var(--p-brand-rgb) / 24%),
+    0 6px 16px rgb(var(--shadow-rgb) / 10%);
+  --shadow-focus: 0 0 0 3px rgb(var(--p-brand-rgb) / 14%);
+
+  /* 悬停位移。设为 none 即可全局关掉浮起。 */
+  --lift: translateY(-1px);
+
+  /* ==========================================================================
+     4. 排版
+     ====================================================================== */
+  --font-body: "Avenir Next", Avenir, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+  --font-display: "DIN Alternate", "Avenir Next Condensed", "PingFang SC",
+    "Hiragino Sans GB", sans-serif;
+  --font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+
+  /* ==========================================================================
+     5. 圆角（仅卡片层级用得到的几档）
+     ====================================================================== */
+  --radius-md: 10px;
+  --radius-xl: 14px;
+
+  /* ==========================================================================
+     6. 动效
+     ====================================================================== */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --duration-fast: 140ms;
+}
+
+/* 尊重系统的减少动效设置 —— 位移直接取消，过渡时长归零由组件层兜底 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --lift: none;
+  }
+}

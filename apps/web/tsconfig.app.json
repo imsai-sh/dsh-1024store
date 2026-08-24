@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": ["vite/client"]
+  },
+  "include": [
+    "src",
+    "worker/api-paths.ts",
+    "worker/lib/catalog.ts",
+    "worker/community/contract.ts",
+    "worker/community/post-body.ts",
+    "worker/lib/plugin-id.ts",
+    "worker/lib/install-methods.ts",
+    "worker/lib/visit-id.ts",
+    "worker/types.ts",
+    "worker/seo-templates.ts"
+  ]
+}

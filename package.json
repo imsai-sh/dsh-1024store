@@ -1,0 +1,36 @@
+{
+  "name": "dsh1024-oss",
+  "version": "0.5.0",
+  "private": true,
+  "license": "MIT",
+  "homepage": "https://deepseek1024.com/",
+  "type": "module",
+  "packageManager": "npm@11.16.0",
+  "workspaces": [
+    "apps/web",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @dsh-1024store/web",
+    "build": "npm run build --workspace @dsh-1024store/web && npm run build --workspace dsh1024",
+    "typecheck": "npm run typecheck --workspace @dsh-1024store/web && npm run typecheck --workspace dsh1024",
+    "test": "npm run test:cli && npm run test --workspace @dsh-1024store/web",
+    "test:cli": "npm test --workspace dsh1024",
+    "test:api-contract": "npm run test:api-contract --workspace @dsh-1024store/web",
+    "test:visual": "npm run test:visual --workspace @dsh-1024store/web",
+    "market:build": "npm run build --workspace dsh1024",
+    "market:test": "npm run test --workspace dsh1024",
+    "pack:cli": "npm run pack:check --workspace dsh1024",
+    "cf-typegen": "npm run cf-typegen --workspace @dsh-1024store/web",
+    "cf-typecheck": "npm run cf-typecheck --workspace @dsh-1024store/web",
+    "db:migrate:local": "npm run db:migrate:local --workspace @dsh-1024store/web",
+    "db:migrate:remote": "npm run db:migrate:remote --workspace @dsh-1024store/web",
+    "predeploy": "npm run build",
+    "deploy": "npm run deploy:worker --workspace @dsh-1024store/web",
+    "seed:community": "node apps/web/scripts/seed-community.mjs"
+  },
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
+  }
+}

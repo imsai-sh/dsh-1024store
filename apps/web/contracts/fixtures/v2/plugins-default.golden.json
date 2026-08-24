@@ -1,0 +1,11 @@
+{
+  "page": 1,
+  "limit": 100,
+  "total": 9,
+  "totalPages": 1,
+  "catalogTotal": 9,
+  "firstPluginId": "Jesse-njx/dsh-crosstalk",
+  "categoryIds": ["tools", "dev", "fun", "notify", "session", "ui", "workflow"],
+  "generatedAt": "2026-08-14T12:00:00Z",
+  "source": "kv"
+}

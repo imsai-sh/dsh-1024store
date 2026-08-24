@@ -1,0 +1,12 @@
+{
+  "query": "gomoku",
+  "page": 1,
+  "limit": 20,
+  "sortBy": "stars",
+  "total": 1,
+  "totalPages": 1,
+  "firstResultId": "omdsh-dev/dsh-gomoku",
+  "dailyLimit": "50",
+  "dailyRemaining": "49",
+  "cacheControl": "no-store"
+}

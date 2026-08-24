@@ -1,0 +1,1066 @@
+/* ============================================================================
+   社区板块（/community）
+
+   站点外框（左侧栏、品牌、页脚、语言切换、头像）由 styles.css 和站点组件负责，
+   这里只写社区独有的东西：板块头、时间线、编辑器、帖子、插件引用卡片、右栏。
+
+   颜色一律取自 styles/tokens.css，本文件不出现字面色值。移动优先，无深色模式。
+
+   **全部选择器都限定在 .community 之下**（文件末尾由构建前的脚本保证，也请手写时
+   遵守）。社区和站点共用 .button-primary / .back-link 这类通用类名，不限定的话
+   这个文件会悄悄改掉目录站的样式——已经发生过一次：语言切换器被这里的规则覆盖，
+   是 test:visual 抓到的。
+
+   一条贯穿全文的取舍：时间线里的帖子之间只用 1px 分隔线，不给每张帖子投影。
+   满屏卡片投影会把注意力摊平，读者不知道该看哪儿。整个板块里只有两类元素允许
+   "浮起来"——编辑器和插件引用卡片，因为它们确实是叠在内容之上的另一层。
+   ========================================================================= */
+
+/* -- 板块头与两栏 -------------------------------------------------------- */
+
+/* 窄屏时 .shell-content 不带内边距（站点各页自己给），社区也得自己给；
+   宽屏由 .shell-frame 统一处理，这里就不能再叠一层。 */
+/* 和首页同一条内容列：站点用 min(1120px, 100% - 48px) 居中，
+   社区不另起一套宽度，否则两个板块的左边缘对不齐，切换时整页会跳。
+   悬浮导航停在这条列左侧的余量里，社区一旦满宽就会被它压住。 */
+.community {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  /* 首页靠 hero 自带的上边距把内容顶下来；社区没有 hero，得自己留，
+     否则标题直接贴着浏览器边框。和站内其它无 hero 页面（账户页 26px）
+     取同一档，再宽一点让它不显得局促。 */
+  padding: 40px 0 64px;
+}
+
+.community .community-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  /* 标题块和分隔线之间要留够。16px 时副标题几乎贴在线上，读起来像
+     一整块，看不出「这条线是分节的」。 */
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+}
+
+.community .community-head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.01em;
+}
+
+.community .community-head p {
+  margin: 4px 0 0;
+  color: var(--subtle);
+  font-size: 14px;
+}
+
+.community .community-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.community .community-body {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+.community .community-main {
+  min-width: 0;
+}
+
+.community .community-rail {
+  min-width: 0;
+}
+
+.community .rail-link {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+@media (min-width: 900px) {
+  .community {
+    /* 上边距不能清零。这条规则是社区还有自己侧栏那会儿留下的——当时外框
+       提供了上边距；并进站点之后没人给了，标题就直接贴在浏览器边框上。 */
+    padding: 48px 0 64px;
+  }
+}
+
+/* 宽到放得下右栏才分两栏。主栏封顶 640px —— 再宽一行文字就不好读了。 */
+@media (min-width: 1100px) {
+  .community .community-body {
+    grid-template-columns: minmax(0, 640px) 300px;
+  }
+
+  .community .community-rail {
+    position: sticky;
+    top: 24px;
+  }
+}
+
+/* ============================================================================
+   DSH 讨论区 —— 社区界面样式
+
+   所有颜色 / 阴影 / 圆角 / 字体一律取自 @dsh-1024store/core/tokens.css，
+   本文件里不出现任何字面色值。和主站共用一套令牌，所以两边看起来是
+   同一个产品，改主题只改令牌文件。
+
+   移动优先：先写窄屏，再用 min-width 逐级增强。不支持深色模式。
+
+   一条贯穿全文的取舍：时间线里的帖子之间只用 1px 分隔线，不给每张帖子
+   投影。满屏卡片投影会把注意力摊平，读者不知道该看哪儿。整个页面里只有
+   两类元素允许"浮起来"——编辑器和插件引用卡片，因为它们确实是叠在
+   内容之上的另一层。
+   ========================================================================= */
+
+.community *,
+.community *::before,
+.community *::after {
+  box-sizing: border-box;
+}
+
+.community html {
+  -webkit-text-size-adjust: 100%;
+}
+
+.community :root {
+  /* Sticky offsets are derived from this, so the header and everything that
+     parks beneath it cannot drift apart. */
+  --header-height: 57px;
+}
+
+/* Touch, not width: what decides whether a control is big enough is the finger,
+   not the viewport. A touch laptop gets the same treatment as a phone. The
+   header grows to fit the taller controls rather than cropping them. */
+@media (pointer: coarse) {
+  .community :root {
+    --header-height: 61px;
+  }
+}
+
+.community body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.community ::selection {
+  background: var(--selection-bg);
+  color: var(--selection-ink);
+}
+
+.community a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.community a:hover {
+  text-decoration: underline;
+}
+
+/* 排除站点组件。这条规则是给社区自己的按钮用的，但它 0-1-1 的优先级
+   会盖过站点组件自己的 0-1-0 类选择器，而 community.css 又在 styles.css
+   之后加载 —— .github-signin 的白字就是这么变成 --ink、在深色底上彻底
+   看不见的。CLAUDE.md 里记的正是这个坑。 */
+.community button:not(.github-signin) {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.community button.github-signin {
+  font: inherit;
+  cursor: pointer;
+}
+
+.community :focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: 6px;
+}
+
+.community .spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  .community to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .community .spin { animation: none; }
+  .community * { transition-duration: 1ms !important; }
+}
+
+/* ==========================================================================
+   导航 / 语言 / 账号
+   ========================================================================== */
+
+.community .viewer {
+  position: relative;
+}
+
+.community .viewer-placeholder {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--surface-sunken);
+}
+
+.community .viewer-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 2px 8px 2px 2px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.community .viewer-trigger:hover {
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+.community .viewer-login {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 8.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.community .viewer-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 40;
+  min-width: 176px;
+  padding: 5px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: grid;
+  gap: 2px;
+}
+
+.community .viewer-menu a,
+.community .viewer-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: start;
+}
+
+.community .viewer-menu a:hover,
+.community .viewer-menu button:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* In the top bar the chip is at the right edge and the menu hangs below it;
+   in the sidebar it sits at the bottom, so the menu has to open upward or it
+   falls off the viewport. */
+@media (max-width: 899px) {
+  .community .viewer-menu {
+    left: auto;
+    right: 0;
+  }
+}
+
+@media (min-width: 900px) {
+  .community .viewer-menu {
+    top: auto;
+    bottom: calc(100% + 6px);
+  }
+}
+
+/* ==========================================================================
+   按钮
+   ========================================================================== */
+
+.community .button-primary,
+.community .button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background var(--duration-fast) var(--ease),
+    box-shadow var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.community .button-primary {
+  background: var(--brand);
+  color: var(--on-brand);
+  box-shadow: var(--shadow-xs);
+}
+
+.community .button-primary:hover:not(:disabled) {
+  background: var(--brand-dark);
+  transform: var(--lift);
+  box-shadow: var(--shadow-hover);
+}
+
+.community .button-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.community .button-secondary {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.community .button-secondary:hover:not(:disabled) {
+  background: var(--surface-hover);
+  text-decoration: none;
+}
+
+.community .button-compact {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* 触控目标 44px 下限。指针精度决定，不是屏幕宽度决定：
+   触摸屏笔记本和手机一样点不准，而鼠标在窄窗口下也不需要更大的按钮。 */
+@media (pointer: coarse) {
+  .community .button-primary,
+.community .button-secondary,
+.community .button-compact {
+    min-height: 44px;
+  }
+}
+
+/* ==========================================================================
+   分段控件（最新 / 热门）
+   ========================================================================== */
+
+.community .tabs {
+  position: sticky;
+  top: calc(var(--header-height) + env(safe-area-inset-top));
+  z-index: 20;
+  display: inline-flex;
+  gap: 2px;
+  margin: 16px 0;
+  padding: 3px;
+  background: var(--surface-muted);
+  border-radius: 999px;
+}
+
+.community .tab {
+  min-height: 34px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--subtle);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+}
+
+.community .tab.is-active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-xs);
+}
+
+@media (min-width: 900px) {
+  /* No top bar at this width, so nothing to clear. */
+  .community .tabs {
+    top: 20px;
+  }
+}
+
+@media (max-width: 899px) {
+  .community .tabs {
+    display: flex;
+    width: 100%;
+    margin: 12px 0;
+  }
+
+  .community .tab {
+    flex: 1;
+  }
+}
+
+@media (pointer: coarse) {
+  .community .tab {
+    min-height: 44px;
+  }
+}
+
+/* ==========================================================================
+   编辑器
+   ========================================================================== */
+
+.community .composer {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--duration-fast) var(--ease), box-shadow var(--duration-fast) var(--ease);
+}
+
+.community .composer:focus-within {
+  border-color: var(--brand-border);
+  box-shadow: var(--shadow-focus);
+}
+
+.community .composer-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.community .composer textarea {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  /* 移动端必须 ≥16px，否则 iOS 聚焦时会放大整页 */
+  font-size: 16px;
+  line-height: 1.6;
+  resize: none;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.community .composer textarea:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.community .composer textarea::placeholder {
+  color: var(--faint);
+}
+
+.community .composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.community .composer-count {
+  font-size: 12px;
+  color: var(--subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.community .composer-count.is-over {
+  color: var(--danger-ink);
+  font-weight: 600;
+}
+
+.community .composer-error {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-line);
+  border-radius: 8px;
+  color: var(--danger-ink);
+  font-size: 13px;
+}
+
+.community .composer-compact {
+  padding: 12px;
+  border-radius: var(--radius-md);
+  margin-top: 16px;
+}
+
+.community .composer-compact .composer-actions {
+  margin-top: 0;
+}
+
+.community .composer-signed-out {
+  display: block;
+  text-align: center;
+}
+
+.community .composer-signed-out p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   时间线
+   ========================================================================== */
+
+.community .feed {
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.community .post {
+  display: flex;
+  gap: 12px;
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--line);
+  transition: background var(--duration-fast) var(--ease);
+}
+
+.community .post-feed:hover {
+  background: var(--brand-wash);
+}
+
+.community .post-avatar {
+  flex: none;
+  align-self: flex-start;
+}
+
+.community .post-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.community .post-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.community .post-author {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.community .post-login,
+.community .post-time,
+.community .post-dot {
+  color: var(--faint);
+  font-size: 13px;
+}
+
+.community .post-time {
+  color: var(--faint);
+}
+
+.community .post-time:hover {
+  color: var(--muted);
+}
+
+.community .post-deleted {
+  margin: 0;
+  color: var(--faint);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.community .post-detail {
+  padding: 20px 12px;
+}
+
+.community .post-detail .post-body {
+  font-size: 16px;
+}
+
+.community .post-reply {
+  padding-left: 12px;
+}
+
+/* -- 正文 ---------------------------------------------------------------- */
+
+.community .post-body {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.community .post-body > *:first-child {
+  margin-top: 0;
+}
+
+.community .post-body > *:last-child {
+  margin-bottom: 0;
+}
+
+.community .post-body p,
+.community .post-body ul,
+.community .post-body ol,
+.community .post-body blockquote {
+  margin: 0 0 10px;
+}
+
+.community .post-heading {
+  margin: 12px 0 6px;
+  font-weight: 700;
+}
+
+.community .post-body ul,
+.community .post-body ol {
+  padding-inline-start: 1.35em;
+}
+
+.community .post-body li {
+  margin-bottom: 3px;
+}
+
+.community .post-body blockquote {
+  padding-inline-start: 12px;
+  border-inline-start: 3px solid var(--brand-quote);
+  color: var(--muted);
+}
+
+.community .post-body code {
+  padding: 1px 5px;
+  background: var(--code-inline-bg);
+  border-radius: 5px;
+  color: var(--code-inline-ink);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+
+.community .post-pre {
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  background: var(--code-bg);
+  border-radius: var(--radius-md);
+  /* 代码块横向溢出留在自己的滚动容器里，页面本身永远不横向滚动 */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.community .post-pre code {
+  padding: 0;
+  background: transparent;
+  color: var(--code-ink);
+  font-size: 13px;
+}
+
+.community .post-table-scroll {
+  margin-bottom: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.community .post-table-scroll table {
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.community .post-table-scroll th,
+.community .post-table-scroll td {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  text-align: start;
+}
+
+.community .post-table-scroll th {
+  background: var(--surface-muted);
+}
+
+.community .post-body hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 12px 0;
+}
+
+/* -- 插件引用卡片 --------------------------------------------------------- */
+
+.community .post-plugins {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 2px;
+}
+
+.community .plugin-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  overflow: hidden;
+  transition: box-shadow var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.community .plugin-card:hover {
+  text-decoration: none;
+  transform: var(--lift);
+  box-shadow: var(--shadow-hover);
+}
+
+/* 左侧那道渐变竖条是整个社区里唯一用到品牌渐变的地方 ——
+   它标记的是"这段内容来自插件目录"，用多了就不再是标记 */
+.community .plugin-card-rule {
+  flex: none;
+  align-self: stretch;
+  width: 3px;
+  background: var(--gradient-brand);
+}
+
+.community .plugin-card-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.community .plugin-card-name {
+  font-weight: 600;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.community .plugin-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+.community .plugin-card-owner {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.community .plugin-card-category {
+  flex: none;
+  padding: 1px 7px;
+  background: var(--surface-muted);
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.community .plugin-card-stars {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-gold);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- 操作行 --------------------------------------------------------------- */
+
+.community .post-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  margin-inline-start: -8px;
+}
+
+.community .post-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--subtle);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  transition: background var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+}
+
+.community .post-action:hover {
+  background: var(--surface-hover);
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.community .post-action.is-active {
+  color: var(--accent-coral);
+}
+
+.community .post-action-danger:hover {
+  color: var(--danger-ink);
+  background: var(--danger-bg);
+}
+
+.community .post-action:disabled {
+  opacity: 0.5;
+}
+
+.community .post-action-label {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  .community .post-action-label {
+    display: inline;
+  }
+}
+
+/* 触控设备上把操作按钮撑到 44px，指头点得中 */
+@media (pointer: coarse) {
+  .community .post-action {
+    min-height: 44px;
+    min-width: 44px;
+    justify-content: center;
+    padding: 0 10px;
+  }
+}
+
+/* ==========================================================================
+   讨论串 / 个人页 / 状态
+   ========================================================================== */
+
+.community .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.community .back-link:hover {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.community .thread-root {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+}
+
+.community .thread-root .post {
+  border-bottom: none;
+}
+
+.community .thread-replies {
+  margin-top: 20px;
+}
+
+.community .profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.community .profile h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.01em;
+}
+
+.community .profile a {
+  font-size: 13px;
+  color: var(--subtle);
+}
+
+.community .feed-state {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.community .feed-state p {
+  margin: 0;
+}
+
+.community .feed-empty {
+  color: var(--subtle);
+}
+
+.community .load-more {
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* ==========================================================================
+   右栏
+   ========================================================================== */
+
+.community .rail-card {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+}
+
+.community .rail-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.community .stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.community .stat-grid div {
+  min-width: 0;
+}
+
+.community .stat-grid dt {
+  color: var(--subtle);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.community .stat-grid dd {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.community .rail-note {
+  margin: 12px 4px 0;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* -- 头像 ----------------------------------------------------------------
+   社区有自己的 Avatar 组件（src/community/components/Avatar.tsx），尺寸由
+   props 决定，所以不能复用站点 .owner-avatar 的固定尺寸规则。类名和站点撞了
+   （.avatar-image 等），但本文件整体限定在 .community 下，互不影响。
+
+   .avatar 的 position: relative 是必需的：站点的 .avatar-image 是
+   position: absolute，少了定位祖先它会跑到最近的定位元素上去 —— 曾经因此
+   盖住左侧导航栏，让整条侧栏点不动。 */
+
+.community .avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: var(--font-display);
+  flex: none;
+}
+
+.community .avatar-fallback {
+  position: static;
+  line-height: 1;
+}
+
+.community .avatar-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease);
+}
+
+.community .avatar-image.is-loaded {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   长文（规则页）
+   ========================================================================== */
+
+.community .prose {
+  max-width: 62ch;
+  color: var(--muted);
+}
+
+.community .prose h1 {
+  margin: 8px 0 12px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.01em;
+}
+
+.community .prose ol {
+  padding-inline-start: 1.3em;
+}
+
+.community .prose li {
+  margin-bottom: 10px;
+}
+
+.community .prose-note {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-size: 13px;
+}
+
+/* 右栏的规则摘要。原来这里是三个统计数字，空社区里它们只是在强调没人。 */
+.community .rail-rules {
+  margin: 0;
+  padding-inline-start: 1.15em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.community .rail-rules li::marker {
+  color: var(--faint);
+}

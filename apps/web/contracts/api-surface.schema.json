@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractVersion", "policy", "routes", "aliases"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "contractVersion": { "type": "integer", "minimum": 1 },
+    "policy": { "type": "string", "minLength": 1 },
+    "routes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["method", "path", "implementation", "transport", "version", "test"],
+        "properties": {
+          "method": { "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+          "path": { "type": "string", "pattern": "^/api/" },
+          "implementation": { "enum": ["hono", "worker"] },
+          "transport": { "enum": ["http", "websocket"] },
+          "version": { "type": "string", "pattern": "^(v[0-9]+|unversioned)$" },
+          "schema": { "type": "string", "pattern": "^schemas/" },
+          "test": { "type": "string", "pattern": "^tests/" }
+        }
+      }
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["host", "path", "target", "test"],
+        "properties": {
+          "host": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "pattern": "^/" },
+          "target": { "type": "string", "pattern": "^/api/" },
+          "test": { "type": "string", "pattern": "^tests/" }
+        }
+      }
+    }
+  }
+}

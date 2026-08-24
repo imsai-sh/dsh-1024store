@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://deepseek1024.com/contracts/catalog.schema.json",
+  "$defs": {
+    "localizedText": {
+      "type": "object",
+      "required": ["en", "zh"],
+      "properties": {
+        "en": { "type": "string" },
+        "zh": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "categoryResult": {
+      "type": "object",
+      "required": ["id", "en", "zh", "count"],
+      "properties": {
+        "id": { "type": "string" },
+        "en": { "type": "string" },
+        "zh": { "type": "string" },
+        "count": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "installMethod": {
+      "type": "object",
+      "required": ["kind", "spec", "command", "verification", "code", "requiresBuildAllowance", "revision", "checkedAt"],
+      "properties": {
+        "kind": { "enum": ["npm", "github"] },
+        "spec": { "type": "string" },
+        "command": { "type": "string" },
+        "verification": { "enum": ["verified", "unverified", "unknown"] },
+        "code": { "type": "string" },
+        "requiresBuildAllowance": { "type": "boolean" },
+        "buildPackage": { "type": ["string", "null"] },
+        "revision": { "type": ["string", "null"] },
+        "checkedAt": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "catalogPlugin": {
+      "type": "object",
+      "required": [
+        "id", "name", "owner", "url", "category", "description", "install", "added",
+        "repository", "stars", "forks", "pushedAt", "updatedAt", "latestReleaseAt",
+        "growth24h", "growth7d", "growth30d", "installCount", "installerCount",
+        "firstInstallCount", "reinstallCount", "updateCount", "removeCount", "failureCount",
+        "installs24h", "installs7d", "installs30d", "latestInstallAt"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 3 },
+        "name": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "pattern": "^https://github\\.com/" },
+        "category": { "type": "string", "minLength": 1 },
+        "description": { "$ref": "#/$defs/localizedText" },
+        "install": { "type": "string", "minLength": 1 },
+        "installMethods": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/installMethod" }
+        },
+        "added": { "type": "string" },
+        "repository": { "type": "string", "minLength": 1 },
+        "stars": { "type": ["integer", "null"], "minimum": 0 },
+        "forks": { "type": ["integer", "null"], "minimum": 0 },
+        "pushedAt": { "type": ["string", "null"] },
+        "updatedAt": { "type": ["string", "null"] },
+        "latestReleaseAt": { "type": ["string", "null"] },
+        "growth24h": { "type": ["integer", "null"] },
+        "growth7d": { "type": ["integer", "null"] },
+        "growth30d": { "type": ["integer", "null"] },
+        "installCount": { "type": "integer", "minimum": 0 },
+        "installerCount": { "type": "integer", "minimum": 0 },
+        "firstInstallCount": { "type": "integer", "minimum": 0 },
+        "reinstallCount": { "type": "integer", "minimum": 0 },
+        "updateCount": { "type": "integer", "minimum": 0 },
+        "removeCount": { "type": "integer", "minimum": 0 },
+        "failureCount": { "type": "integer", "minimum": 0 },
+        "installs24h": { "type": "integer", "minimum": 0 },
+        "installs7d": { "type": "integer", "minimum": 0 },
+        "installs30d": { "type": "integer", "minimum": 0 },
+        "latestInstallAt": { "type": ["string", "null"] },
+        "npmDownloads7d": { "type": ["integer", "null"], "minimum": 0 },
+        "npmDownloadsStart": { "type": ["string", "null"] },
+        "npmDownloadsEnd": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "rankedPlugin": {
+      "allOf": [
+        { "$ref": "#/$defs/catalogPlugin" },
+        {
+          "type": "object",
+          "required": ["repositorySiblings"],
+          "properties": {
+            "repositorySiblings": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "catalogSource": { "enum": ["d1", "kv", "stale", "empty"] }
+  }
+}

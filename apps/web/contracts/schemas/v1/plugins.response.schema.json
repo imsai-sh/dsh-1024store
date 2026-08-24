@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://deepseek1024.com/contracts/v1/plugins.response.schema.json",
+  "type": "object",
+  "required": ["packages", "rankings", "categories", "meta"],
+  "properties": {
+    "packages": {
+      "type": "array",
+      "items": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/catalogPlugin" }
+    },
+    "rankings": {
+      "type": "object",
+      "required": ["stars", "installs", "installs24h", "installs7d", "installs30d", "growth24h", "growth7d", "growth30d", "newest", "active"],
+      "properties": {
+        "stars": { "$ref": "#/$defs/ranking" },
+        "installs": { "$ref": "#/$defs/ranking" },
+        "installs24h": { "$ref": "#/$defs/ranking" },
+        "installs7d": { "$ref": "#/$defs/ranking" },
+        "installs30d": { "$ref": "#/$defs/ranking" },
+        "growth24h": { "$ref": "#/$defs/ranking" },
+        "growth7d": { "$ref": "#/$defs/ranking" },
+        "growth30d": { "$ref": "#/$defs/ranking" },
+        "newest": { "$ref": "#/$defs/ranking" },
+        "active": { "$ref": "#/$defs/ranking" }
+      },
+      "additionalProperties": true
+    },
+    "categories": {
+      "type": "array",
+      "items": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/categoryResult" }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["total", "catalogTotal", "updated", "generatedAt", "revision", "source", "metricCoverage"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "catalogTotal": { "type": "integer", "minimum": 0 },
+        "updated": { "type": "string" },
+        "generatedAt": { "type": "string" },
+        "revision": { "type": "string" },
+        "source": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/catalogSource" },
+        "metricCoverage": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "ranking": {
+      "type": "array",
+      "items": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/rankedPlugin" }
+    }
+  },
+  "additionalProperties": true
+}

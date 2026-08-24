@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://deepseek1024.com/contracts/v3/rankings.response.schema.json",
+  "type": "object",
+  "required": ["rankings", "siblingsByRepository", "catalogTotal", "categories", "generatedAt", "source"],
+  "properties": {
+    "rankings": {
+      "type": "object",
+      "required": ["stars", "installs", "installs24h", "installs7d", "installs30d", "growth24h", "growth7d", "growth30d", "newest", "active", "npmDownloads7d"],
+      "properties": {
+        "stars": { "$ref": "#/$defs/ranking" },
+        "installs": { "$ref": "#/$defs/ranking" },
+        "installs24h": { "$ref": "#/$defs/ranking" },
+        "installs7d": { "$ref": "#/$defs/ranking" },
+        "installs30d": { "$ref": "#/$defs/ranking" },
+        "growth24h": { "$ref": "#/$defs/ranking" },
+        "growth7d": { "$ref": "#/$defs/ranking" },
+        "growth30d": { "$ref": "#/$defs/ranking" },
+        "newest": { "$ref": "#/$defs/ranking" },
+        "active": { "$ref": "#/$defs/ranking" },
+        "npmDownloads7d": { "$ref": "#/$defs/ranking" }
+      },
+      "additionalProperties": false
+    },
+    "siblingsByRepository": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/catalogPlugin" }
+      }
+    },
+    "catalogTotal": { "type": "integer", "minimum": 0 },
+    "categories": {
+      "type": "array",
+      "items": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/categoryResult" }
+    },
+    "generatedAt": { "type": "string" },
+    "source": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/catalogSource" }
+  },
+  "$defs": {
+    "ranking": {
+      "type": "array",
+      "items": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/rankedPlugin" }
+    }
+  },
+  "additionalProperties": true
+}

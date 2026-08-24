@@ -1,0 +1,21 @@
+{
+  "name": "DSH 1024Store",
+  "short_name": "DSH",
+  "description": "Community plugin store for DeepSeek Harness: browse, compare, and install dsh plugins.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#4d6bfe",
+  "background_color": "#f4f1e9",
+  "icons": [
+    {
+      "src": "/deepseek1024-icon.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/deepseek1024.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "packageCount": 3,
+  "firstPackageId": "Jesse-njx/dsh-crosstalk",
+  "starsLeaderId": "Jesse-njx/dsh-crosstalk",
+  "categoryIds": ["fun", "session", "ui"],
+  "meta": {
+    "total": 3,
+    "catalogTotal": 9,
+    "updated": "2026-08-14",
+    "generatedAt": "2026-08-14T12:00:00Z",
+    "revision": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source": "kv",
+    "metricCoverage": 8
+  }
+}

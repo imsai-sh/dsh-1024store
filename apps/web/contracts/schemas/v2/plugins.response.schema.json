@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://deepseek1024.com/contracts/v2/plugins.response.schema.json",
+  "type": "object",
+  "required": ["plugins", "page", "limit", "total", "totalPages", "catalogTotal", "categories", "generatedAt", "source"],
+  "properties": {
+    "plugins": {
+      "type": "array",
+      "items": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/catalogPlugin" }
+    },
+    "page": { "type": "integer", "minimum": 1 },
+    "limit": { "type": "integer", "minimum": 1, "maximum": 200 },
+    "total": { "type": "integer", "minimum": 0 },
+    "totalPages": { "type": "integer", "minimum": 1 },
+    "catalogTotal": { "type": "integer", "minimum": 0 },
+    "categories": {
+      "type": "array",
+      "items": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/categoryResult" }
+    },
+    "generatedAt": { "type": "string" },
+    "source": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/catalogSource" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://deepseek1024.com/contracts/v1/plugin-search.response.schema.json",
+  "type": "object",
+  "required": ["query", "page", "limit", "sortBy", "total", "totalPages", "results"],
+  "properties": {
+    "query": { "type": "string" },
+    "page": { "type": "integer", "minimum": 1 },
+    "limit": { "type": "integer", "minimum": 1, "maximum": 100 },
+    "sortBy": { "enum": ["stars", "installs", "installs24h", "installs7d", "installs30d", "growth24h", "growth7d", "growth30d", "newest", "active", "name"] },
+    "total": { "type": "integer", "minimum": 0 },
+    "totalPages": { "type": "integer", "minimum": 1 },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "owner", "url", "category", "description", "stars", "installCount", "growth24h", "added", "pushedAt", "install"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "owner": { "type": "string" },
+          "url": { "type": "string" },
+          "category": { "type": "string" },
+          "description": { "$ref": "https://deepseek1024.com/contracts/catalog.schema.json#/$defs/localizedText" },
+          "stars": { "type": ["integer", "null"] },
+          "installCount": { "type": "integer", "minimum": 0 },
+          "growth24h": { "type": ["integer", "null"] },
+          "added": { "type": "string" },
+          "pushedAt": { "type": ["string", "null"] },
+          "install": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

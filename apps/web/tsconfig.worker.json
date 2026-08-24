@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": ["@cloudflare/workers-types", "vitest/globals"]
+  },
+    // The community's routes are bundled into this Worker, so they are part of
+  // this program. Its front-end (apps/community/src) is not.
+  "include": [
+    "worker",
+    "tests",
+    "worker-configuration.d.ts",
+    "tests/node-runtime.d.ts"
+  ]
+}

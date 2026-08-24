@@ -1,0 +1,99 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dsh-store",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-08-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    {
+      "pattern": "deepseek1024.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.deepseek1024.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "api.deepseek1024.com",
+      "custom_domain": true
+    }
+  ],
+  "secrets": {
+    "required": [
+      "GITHUB_TOKEN",
+      "INSTALL_CLIENT_HASH_SECRET",
+      "CATALOG_SYNC_TOKEN",
+      "GITHUB_OAUTH_CLIENT_ID",
+      "GITHUB_OAUTH_CLIENT_SECRET"
+    ]
+  },
+  "vars": {
+    // 逗号分隔的 GitHub login，可以删社区里任何人的内容。留空表示只有作者
+    // 能删自己的。COMMUNITY_DEV_LOGIN 故意不在这里 —— 见 apps/community/README.md。
+    "COMMUNITY_ADMIN_LOGINS": ""
+  },
+  "ai": {
+    "binding": "AI"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "CATALOG_CACHE",
+      "id": "50a780cc01f9435d86b82ab46004f691"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "CATALOG_DB",
+      "database_name": "dsh-store-star-history",
+      "database_id": "57006b9f-17e1-466f-b941-71c35cbff092",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "LIVE_STATS",
+        "class_name": "LiveStats"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["LiveStats"]
+    }
+  ],
+  "triggers": {
+    // Explicitly empty, not omitted: deploying with no `crons` key would LEAVE
+    // any previously deployed Cron Triggers in place, and this Worker no longer
+    // exports a scheduled() handler. Collection does not run in this Worker.
+    "crons": []
+  },
+  "limits": {
+    "cpu_ms": 300000,
+    "subrequests": 10000
+  },
+  "assets": {
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
+  "version_metadata": {
+    "binding": "CF_VERSION_METADATA"
+  },
+  "observability": {
+    "enabled": true,
+    // 2000 万事件/月含在套餐内，本站量级远低于此，所以采样不是为了省钱，
+    // 是为了在量级上来之后不用回头再调。1% 足够看出系统性故障——审核
+    // 分类器挂掉时 100% 的发帖都会失败，抽 1% 也照样看得见。
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 0.01
+    },
+    // traces 和 logs 共用同一份配额，而这个站的排障靠的是结构化日志，
+    // 不是分布式追踪。
+    "traces": {
+      "enabled": false
+    }
+  }
+}

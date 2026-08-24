@@ -1,0 +1,26 @@
+{
+  "name": "dsh-1024store-catalog",
+  "updated": "2026-08-14T12:00:00Z",
+  "count": 9,
+  "total": 9,
+  "firstCategory": {
+    "id": "ui",
+    "order": 10,
+    "label": {
+      "en": "UI Enhancements",
+      "zh": "UI 增强"
+    }
+  },
+  "firstPlugin": {
+    "id": "openma-ai/deepseek-harness-tui",
+    "name": "deepseek-harness-tui",
+    "owner": "openma-ai",
+    "url": "https://github.com/openma-ai/deepseek-harness-tui",
+    "category": "ui",
+    "install": "dsh plugin --profile web add @openma/deepseek-harness-tui",
+    "target": "@openma/deepseek-harness-tui",
+    "allowBuild": null,
+    "added": "2026-08-14",
+    "stars": 42
+  }
+}

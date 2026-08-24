@@ -1,0 +1,28 @@
+# DSH 1024Store
+
+> The community plugin store, marketplace and hub for DeepSeek Harness (`dsh`), DeepSeek's coding-agent CLI where nearly everything is a plugin. 2,900+ plugins indexed across 11 categories, with GitHub-star rankings, anonymous install counts, and a free public search API.
+
+Install any listed plugin with the official DeepSeek Harness CLI:
+
+    dsh plugin --profile web add github:<owner>/<repository>
+
+This is an independent community project. It is not affiliated with or endorsed by DeepSeek.
+
+## Catalog
+
+- [Plugin catalog](https://deepseek1024.com/plugins): every indexed DeepSeek Harness plugin, filterable by category
+- [Plugin rankings](https://deepseek1024.com/): ranked by 24h star growth, GitHub stars, releases and repository activity
+- [Full plugin list with descriptions and install commands](https://deepseek1024.com/llms-full.txt): the whole catalog as plain text
+
+## API
+
+- [API reference](https://deepseek1024.com/docs/api): rate limits, error codes, and GitHub-login API keys
+- Public search endpoint, free and no key required for light use, called directly rather than crawled:
+  `GET https://api.deepseek1024.com/v1/plugins/search?q=theme`
+
+## Source
+
+- [Site and CLI source](https://github.com/imsai-sh/dsh1024-oss): the deepseek1024.com Worker and the dsh1024 npm package
+- [Catalog repository](https://github.com/imsai-sh/awesome-deepseek-harness-plugins): the awesome list and plugin submissions
+- [Submit a plugin](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/blob/main/CONTRIBUTING.md)
+- [DeepSeek Harness itself](https://github.com/deepseek-ai/DeepSeek-Harness)
