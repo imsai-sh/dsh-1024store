@@ -158,7 +158,7 @@ export async function forwardPluginCommand(command, context) {
       telemetryConfig = (await ensureTelemetryConfig(dshHome, { now, uuid })).config
     }
     if (effectiveTelemetryEnabled(telemetryConfig, env) && await markNoticeShown(dshHome, telemetryConfig, now)) {
-      stderr('DSH 1024Store records anonymous plugin install outcomes and timestamps. Disable with `npx dsh1024 telemetry disable`, `DO_NOT_TRACK=1`, or `DSH1024_TELEMETRY=0`. Details: https://github.com/imsai-sh/dsh1024-oss/blob/main/docs/install-analytics.md')
+      stderr('DSH 1024Store records anonymous plugin install outcomes and timestamps. Disable with `npx dsh1024 telemetry disable`, `DO_NOT_TRACK=1`, or `DSH1024_TELEMETRY=0`. Details: https://github.com/imsai-sh/dsh-1024store/blob/main/docs/install-analytics.md')
     }
   } catch {
     // Telemetry storage must never block an installation.

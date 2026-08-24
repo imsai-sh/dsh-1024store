@@ -185,7 +185,7 @@ install exit code. Client identity, queue, and receipt updates use short-lived
 cross-process locks so concurrent installs sharing one `DSH_HOME` do not
 overwrite each other; network requests run outside those locks.
 
-Details: [docs/install-analytics.md](https://github.com/imsai-sh/dsh1024-oss/blob/main/docs/install-analytics.md).
+Details: [docs/install-analytics.md](https://github.com/imsai-sh/dsh-1024store/blob/main/docs/install-analytics.md).
 
 ## Controls
 

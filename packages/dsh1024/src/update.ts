@@ -21,7 +21,7 @@ export const DEFAULT_UPDATE_FALLBACK_URL = 'https://registry.npmjs.org/dsh1024/l
 // Pre-split npm releases baked in the old awesome-deepseek-harness-plugins URL for
 // this leg; it 404s for them since the package moved here. Accepted: the first two
 // legs above still serve those clients, so this is degradation, not breakage.
-export const DEFAULT_UPDATE_LAST_RESORT_URL = 'https://api.github.com/repos/imsai-sh/dsh1024-oss/contents/packages/dsh1024/package.json?ref=main'
+export const DEFAULT_UPDATE_LAST_RESORT_URL = 'https://api.github.com/repos/imsai-sh/dsh-1024store/contents/packages/dsh1024/package.json?ref=main'
 export const DEFAULT_RELEASE_URL = 'https://deepseek1024.com/plugins/imsai-sh/awesome-deepseek-harness-plugins/packages/dsh1024'
 
 const FETCH_TIMEOUT_MS = 8_000

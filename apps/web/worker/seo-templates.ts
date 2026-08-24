@@ -17,7 +17,7 @@ export const SITE_NAME = 'DSH 1024Store'
 export const SITE_IMAGE = `${SITE_ORIGIN}/og-default.png`
 export const GITHUB_REPOSITORY = 'https://github.com/imsai-sh/awesome-deepseek-harness-plugins'
 /** The site + CLI source repository (the catalog repository above stays the public front door). */
-export const GITHUB_SOURCE_REPOSITORY = 'https://github.com/imsai-sh/dsh1024-oss'
+export const GITHUB_SOURCE_REPOSITORY = 'https://github.com/imsai-sh/dsh-1024store'
 export const TITLE_MAX = 60
 export const DESC_MAX = 160
 

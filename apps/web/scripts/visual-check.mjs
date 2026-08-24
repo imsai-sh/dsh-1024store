@@ -641,7 +641,7 @@ try {
   if (!(await rankings.locator('.site-bottom-link p').textContent())?.includes('DeepSeek')) {
     throw new Error('unofficial project notice is missing from the page bottom')
   }
-  if ((await rankings.locator('.catalog-hero .github-link[href="https://github.com/imsai-sh/dsh1024-oss"]').count()) !== 1) {
+  if ((await rankings.locator('.catalog-hero .github-link[href="https://github.com/imsai-sh/dsh-1024store"]').count()) !== 1) {
     throw new Error('GitHub repository link is missing from the catalog banner')
   }
   if ((await rankings.locator('.catalog-hero .hero-author[href="https://www.imsai.cc/"][target="_blank"]').count()) !== 1) {

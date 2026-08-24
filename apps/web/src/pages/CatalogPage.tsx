@@ -509,7 +509,7 @@ export function CatalogPage({ view }: CatalogPageProps) {
               </a>
               <a
                 className="hero-action-link github-link"
-                href="https://github.com/imsai-sh/dsh1024-oss"
+                href="https://github.com/imsai-sh/dsh-1024store"
                 target="_blank"
                 rel="noreferrer"
               >

@@ -22,7 +22,7 @@ This is an independent community project. It is not affiliated with or endorsed 
 
 ## Source
 
-- [Site and CLI source](https://github.com/imsai-sh/dsh1024-oss): the deepseek1024.com Worker and the dsh1024 npm package
+- [Site and CLI source](https://github.com/imsai-sh/dsh-1024store): the deepseek1024.com Worker and the dsh1024 npm package
 - [Catalog repository](https://github.com/imsai-sh/awesome-deepseek-harness-plugins): the awesome list and plugin submissions
 - [Submit a plugin](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/blob/main/CONTRIBUTING.md)
 - [DeepSeek Harness itself](https://github.com/deepseek-ai/DeepSeek-Harness)

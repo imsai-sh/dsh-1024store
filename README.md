@@ -1,4 +1,4 @@
-# dsh1024-oss
+# dsh-1024store
 
 The source of [deepseek1024.com](https://deepseek1024.com/) — the DSH 1024Store website and Cloudflare Worker — and the [`dsh1024`](https://www.npmjs.com/package/dsh1024) npm package (the wrapper CLI plus the in-harness 1024Store plugin).
 

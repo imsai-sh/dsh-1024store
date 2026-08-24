@@ -34,7 +34,7 @@ const MAX_DURATION_MS = 86_400_000
 
 const PRIVACY_NOTICE = 'DSH 1024Store records anonymous plugin install outcomes and timestamps. '
   + 'Disable with `DO_NOT_TRACK=1`, `DSH1024_TELEMETRY=0`, or `npx dsh1024 telemetry disable`. '
-  + 'Details: https://github.com/imsai-sh/dsh1024-oss/blob/main/docs/install-analytics.md'
+  + 'Details: https://github.com/imsai-sh/dsh-1024store/blob/main/docs/install-analytics.md'
 
 export interface InstallEventInput {
   pluginId: string
