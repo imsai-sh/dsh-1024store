@@ -382,9 +382,9 @@ describe('edge cache key normalization', () => {
 
   it('versions the v1 listing cache independently of its public query shape', () => {
     expect(key('https://deepseek1024.com/api/v1/plugins'))
-      .toBe('https://deepseek1024.com/__edge_cache/v2/api/v1/plugins')
+      .toBe('https://deepseek1024.com/__edge_cache/v3/api/v1/plugins')
     expect(key('https://deepseek1024.com/api/v1/plugins?sort=name&bust=old'))
-      .toBe('https://deepseek1024.com/__edge_cache/v2/api/v1/plugins?sort=name')
+      .toBe('https://deepseek1024.com/__edge_cache/v3/api/v1/plugins?sort=name')
   })
 
   it('versions npm-bearing listing and ranking caches for ownership fixes', () => {
