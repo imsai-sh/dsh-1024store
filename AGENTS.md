@@ -6,7 +6,7 @@
 - Plugin API routes use the `/api/v1/` prefix with plural resources (`/api/v1/plugins`, `/api/v1/plugins/:owner/:name`). The outward-facing search API is `https://api.deepseek1024.com/v1/plugins/search`.
 - `/plugin`, `/plugin/:owner/:name`, `/packages`, `/packages/:owner/:name` and `/rankings` are permanent 301 **sources only**. Do not cite them as live URLs.
 - Treat public route paths as permanent SEO contracts. Do not rename or remove them without explicit user approval and a migration plan covering permanent redirects, canonical URLs, and existing inbound links.
-- Page titles, descriptions, JSON-LD and the crawlable pre-hydration shell all come from `apps/web/worker/seo-templates.ts` and `apps/web/worker/seo-content.ts`. Both the Worker and the React app import them; never fork the copy into a page component or a translation file.
+- Page titles, descriptions, JSON-LD and the crawlable pre-hydration shell all come from `web/worker/seo-templates.ts` and `web/worker/seo-content.ts`. Both the Worker and the React app import them; never fork the copy into a page component or a translation file.
 - When replacing an already-published route, keep a permanent redirect from the old path to the canonical path.
 
 ## API backward compatibility
@@ -14,14 +14,14 @@
 - Every API is a published compatibility contract, whether it is currently used by the site, a non-Web client, a third party, an authenticated tool, an internal sync job or a WebSocket client. Never assume a site-only caller updates in lockstep with the Worker.
 - Within an existing API version, do not remove or rename fields, change types or nullability, reinterpret values, change defaults, status/error codes, pagination, ordering, authentication behavior or important headers. Treat new response enum values as potentially breaking. Compatible additions must remain optional or ignorable to old clients.
 - Breaking changes require a new versioned route while the previous route and its behavior remain available through an explicit migration and deprecation period.
-- `apps/web/contracts/api-surface.json` is the exhaustive API inventory. Every Hono API route, Worker-owned API transport and public-host alias must be registered there. Versioned response schemas and golden semantic fixtures live beside it.
+- `web/contracts/api-surface.json` is the exhaustive API inventory. Every Hono API route, Worker-owned API transport and public-host alias must be registered there. Versioned response schemas and golden semantic fixtures live beside it.
 - Run `npm run test:api-contract` for every API-related change. Do not make a failure green by casually rewriting a historical schema or golden fixture; contract changes require explicit API-owner review. Keep the route coverage test, historical request behavior and known consumer-adapter tests current.
 
 ## Bound hostnames and the public API surface
 
-The Worker answers on three custom domains, all declared in `apps/web/wrangler.jsonc`
-under `routes`, and each host has a deliberately different surface. `apps/web/worker/public-api.ts`
-is the single place that decides which is which; `apps/web/tests/public-api.test.ts` guards it.
+The Worker answers on three custom domains, all declared in `web/wrangler.jsonc`
+under `routes`, and each host has a deliberately different surface. `web/worker/public-api.ts`
+is the single place that decides which is which; `web/tests/public-api.test.ts` guards it.
 
 - `deepseek1024.com` — the website and the full `/api/...` surface, including sign-in and API-key
   management. This is the only host that serves the site.
@@ -33,7 +33,7 @@ is the single place that decides which is which; `apps/web/tests/public-api.test
 
 That host exists for third-party consumers, and its one substantive endpoint is metered
 independently of the site. `/v1/plugins/search` enforces a per-caller quota — `ANONYMOUS_QUOTA`
-and `AUTHENTICATED_QUOTA` in `apps/web/worker/lib/api-quota.ts`, counters kept in D1 through
+and `AUTHENTICATED_QUOTA` in `web/worker/lib/api-quota.ts`, counters kept in D1 through
 `consumeQuota`: 10/min and 50/day anonymous, 30/min and 500/day with a key. Anonymous callers are
 keyed by `ip:<HMAC of CF-Connecting-IP>` so the raw address never reaches D1; authenticated callers
 are keyed by `user:<id>` and not by key id, so rotating or minting keys cannot open a fresh window.
@@ -41,7 +41,7 @@ Every response carries `X-RateLimit-Daily-Limit` and `X-RateLimit-Daily-Remainin
 `Retry-After` and returns `429`, with `DAILY_QUOTA_EXCEEDED` for the day window and `RATE_LIMITED`
 for the minute window. `/v1/health` is deliberately unmetered.
 
-The quota lives on the search handler in `apps/web/worker/app.ts`, not on the host check, so
+The quota lives on the search handler in `web/worker/app.ts`, not on the host check, so
 `deepseek1024.com/api/v1/plugins/search` draws down the same counters.
 
 Four ways this gets broken, in rough order of likelihood:
@@ -75,7 +75,7 @@ npm run db:migrate:remote --workspace @dsh-1024store/web
 npm run deploy
 ```
 
-Extend `apps/web/tests/public-api.test.ts` whenever you change which host serves what.
+Extend `web/tests/public-api.test.ts` whenever you change which host serves what.
 
 ## The site is one app with four sections
 
@@ -112,7 +112,7 @@ Four things this depends on:
    all that stands between a visitor and a session for any login they name.
 
 Seed the local community with `npm run seed:community` (writes only to the
-miniflare SQLite file under `apps/web/.wrangler`).
+miniflare SQLite file under `web/.wrangler`).
 
 ## Responsive web support
 
@@ -124,12 +124,12 @@ miniflare SQLite file under `apps/web/.wrangler`).
 - Keep body and explanatory copy readable on mobile (normally at least 12px for compact metadata and 14px for prose). Prefer reflowing or intentionally scrollable local regions over shrinking text to make desktop layouts fit.
 - Horizontal chip, tab, table, code, and README overflow must stay inside an intentional local scroller with touch panning; the document itself must never scroll horizontally.
 - Preserve task priority when content stacks: primary actions and safety information come before secondary metadata, and long-form content comes afterward.
-- When changing responsive behavior, extend `apps/web/scripts/visual-check.mjs` with a regression assertion for the affected mobile interaction or layout invariant.
+- When changing responsive behavior, extend `web/scripts/visual-check.mjs` with a regression assertion for the affected mobile interaction or layout invariant.
 
 ## The two-repository split
 
-This repository holds the DSH 1024Store application only: `apps/web` (the deepseek1024.com
-site + `dsh-store` Worker) and `packages/dsh1024` (the published npm package). The plugin
+This repository holds the DSH 1024Store application only: `web` (the deepseek1024.com
+site + `dsh-store` Worker) and `plugin` (the published npm package). The plugin
 catalog — `catalog/plugins/*.json`, the awesome-list README generation, and the plugin
 submission review workflow — lives in
 [imsai-sh/awesome-deepseek-harness-plugins](https://github.com/imsai-sh/awesome-deepseek-harness-plugins).
@@ -139,13 +139,18 @@ Rules that follow from the split:
   are frozen: third-party consumers depend on them, and the dsh1024 validator rejects a
   registry response where `count` and `plugins.length` disagree. Additive changes go to
   versioned v2/v3 routes.
-- **`catalog/categories.json` is a vendored mirror** of the catalog repository's file. A
-  category change lands in both repositories and only reaches the site when this Worker is
-  redeployed. Never let the two copies drift.
+- **Category definitions live in D1** (`catalog_categories`, seeded by migration 0014 and
+  reconciled by the catalog repo's sync workflow via the `categories` field of
+  `POST /api/v1/catalog/sync`). The Worker bundles no category data; the human source of
+  truth is the catalog repository's `catalog/categories.json`, and changes flow here as
+  data — no coordinated deploy needed. Only the synthetic `UNCLASSIFIED_CATEGORY` bucket
+  stays in code (`worker/lib/categories.ts`), aligned with the catalog repo's README
+  generator label.
 - **Identity constants are data, not paths.** `imsai-sh/awesome-deepseek-harness-plugins`
   (and `…/packages/dsh1024`) key live D1 rows, `/api/v1/self/update`, and install
-  analytics. They deliberately keep the catalog repository's name; do not rename them to
-  match this repository.
+  analytics. They deliberately keep the catalog repository's name and its historical
+  in-repo path — the `packages/dsh1024` segment survives every directory rename; do not
+  "fix" it to `plugin`.
 - **Cross-repo invariants with no shared CI** (drift fails silently — check the catalog
   repo when touching these): `worker/lib/plugin-id.ts` ↔ `scripts/lib/catalog-entry.mjs`;
   `worker/app.ts` `ENTRY_ID`/`ENTRY_KEYS` ↔ `catalog/schema/plugin.schema.json`;
@@ -154,4 +159,14 @@ Rules that follow from the split:
 - **The catalog repo's CI depends on this Worker.** Its catalog-sync workflow POSTs to
   `POST /api/v1/catalog/sync` with `CATALOG_SYNC_TOKEN` (same value must exist as a Worker
   secret here and an Actions secret there), its README generator pages `/api/v2/plugins`,
-  and it screenshots the live homepage. See `docs/deployment.md`.
+  and it screenshots the live homepage. See `web/docs/deployment.md`.
+
+Single sources of truth after the split:
+
+| Data | Source of truth |
+| --- | --- |
+| Live catalog entries | Production D1 (`dsh-store-star-history`), fed by the catalog repo's sync workflow and the maintainer's out-of-band collection jobs |
+| Catalog read path | KV snapshot (`CATALOG_CACHE`), rebuilt ONLY by the sync endpoint or on a cold start — never opportunistically on reads (a read-path refresh once ground D1 into an unrecoverable loop) |
+| Category definitions | D1 `catalog_categories` (seeded by migration 0014, reconciled by the sync `categories` field); human-edited in the catalog repo's `catalog/categories.json` |
+| Curated entry files | `catalog/plugins/*.json` in the catalog repository |
+| API shapes | `web/contracts/api-surface.json` + `web/docs/api.md`; v1 surfaces frozen |

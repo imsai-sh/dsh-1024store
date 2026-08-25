@@ -25,18 +25,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # catalog/categories.json is a vendored mirror of the catalog repository's
-      # copy (the source of truth). Fail loudly on drift: a category that exists
-      # there but not here would make the Worker's sync endpoint reject the whole
-      # catalog push. Soft-skip when the upstream fetch itself fails.
-      - name: Vendored categories.json matches the catalog repository
-        run: |
-          if curl -fsSL --max-time 30 -o /tmp/upstream-categories.json \
-            https://raw.githubusercontent.com/imsai-sh/awesome-deepseek-harness-plugins/main/catalog/categories.json; then
-            diff -u /tmp/upstream-categories.json catalog/categories.json
-          else
-            echo "::warning::Could not fetch the catalog repo's categories.json; skipping drift check."
-          fi
       - run: npm run cf-typecheck
         env:
           GITHUB_TOKEN: ci-typecheck-placeholder

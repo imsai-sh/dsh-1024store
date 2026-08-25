@@ -1,7 +1,7 @@
 # API contracts and their implementation require explicit API-owner review.
-/apps/web/contracts/ @imsai-sh
-/apps/web/worker/ @imsai-sh
-/apps/web/tests/api-contract.test.ts @imsai-sh
-/docs/api.md @imsai-sh
+/web/contracts/ @imsai-sh
+/web/worker/ @imsai-sh
+/web/tests/api-contract.test.ts @imsai-sh
+/web/docs/api.md @imsai-sh
 # The published npm package: review required before anything reaches a release.
-/packages/dsh1024/ @imsai-sh
+/plugin/ @imsai-sh

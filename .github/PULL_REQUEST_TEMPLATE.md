@@ -9,7 +9,7 @@ pagination, ordering, authentication or shared API code complete this section. O
 unchecked.
 
 - [ ] This change has no API behavior impact, or its API impact is described above
-- [ ] Every added or changed API route is registered in `apps/web/contracts/api-surface.json`
+- [ ] Every added or changed API route is registered in `web/contracts/api-surface.json`
 - [ ] Existing-version behavior remains backward compatible and historical contract fixtures were not casually rewritten
 - [ ] Any breaking behavior uses a new versioned route while the previous version remains available
 - [ ] `npm run test:api-contract` passes

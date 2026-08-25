@@ -7,8 +7,8 @@
   "type": "module",
   "packageManager": "npm@11.16.0",
   "workspaces": [
-    "apps/web",
-    "packages/*"
+    "web",
+    "plugin"
   ],
   "scripts": {
     "dev": "npm run dev --workspace @dsh-1024store/web",
@@ -25,9 +25,8 @@
     "cf-typecheck": "npm run cf-typecheck --workspace @dsh-1024store/web",
     "db:migrate:local": "npm run db:migrate:local --workspace @dsh-1024store/web",
     "db:migrate:remote": "npm run db:migrate:remote --workspace @dsh-1024store/web",
-    "predeploy": "npm run build",
-    "deploy": "npm run deploy:worker --workspace @dsh-1024store/web",
-    "seed:community": "node apps/web/scripts/seed-community.mjs"
+    "deploy": "npm run deploy --workspace @dsh-1024store/web",
+    "seed:community": "node web/scripts/seed-community.mjs"
   },
   "engines": {
     "node": ">=22",
