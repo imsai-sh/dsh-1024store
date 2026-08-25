@@ -104,7 +104,8 @@
     // vite 插件即产出本环境的部署配置，`npx wrangler deploy` 零参数生效。
     // 绑定字段不可继承，必须与顶层逐项保持一致；改顶层绑定时同步改这里。
     "staging": {
-      "name": "dsh-1024store",
+      // 名字必须与 Workers Builds 项目名一致（Builds 校验部署目标）。
+      "name": "dsh-1024store-uat",
       "workers_dev": true,
       "routes": [],
       // staging 不强制 OAuth 两个 secret（登录功能在 staging 不启用）；
