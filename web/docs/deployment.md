@@ -27,7 +27,7 @@ committed `.dev.vars` value; the plugin detail endpoint uses it to read reposito
 ## Staging worker (pre-release twin)
 
 A staging Worker (`dsh-1024store-uat`) can be bound to this repository's `main` via Cloudflare
-Workers Builds. It is the `staging` environment declared in `web/wrangler.jsonc` (`env.staging`):
+Workers Builds. It is the `uat` environment declared in `web/wrangler.jsonc` (`env.uat`):
 the exact same bundle against the SAME production D1/KV, differing from production only in
 Worker name and the explicitly-empty `routes` (it serves from workers.dev). The Builds
 project uses stock commands — the environment is selected by a build variable, not a flag:
@@ -37,7 +37,7 @@ project uses stock commands — the environment is selected by a build variable,
 | Root directory | `/web` |
 | Build command | `npm install && npm run build` |
 | Deploy command | `npx wrangler deploy` |
-| Build variable | `CLOUDFLARE_ENV=staging` — the only one needed (the staging env drops the required-secrets build gate, so no placeholder values are necessary) |
+| Build variable | `CLOUDFLARE_ENV=uat` — the only one needed (the staging env drops the required-secrets build gate, so no placeholder values are necessary) |
 
 The Cloudflare vite plugin reads `CLOUDFLARE_ENV` at build time and emits the
 staging-resolved deploy config, which the bare `npx wrangler deploy` then picks up.
@@ -50,7 +50,7 @@ Notes:
   from staging land in the production D1. `POST /api/v1/catalog/sync` on staging rebuilds
   the shared KV snapshot (idempotent, same data).
 - Copy the production secret values onto the staging Worker (`wrangler secret put … --env
-  staging`, run from `web/`) so hashing and sync behave identically. GitHub OAuth login needs its own
+  uat`, run from `web/`) so hashing and sync behave identically. GitHub OAuth login needs its own
   OAuth App (the callback URL is origin-derived), so it stays unconfigured on staging
   unless deliberately set up.
 - The LiveStats Durable Object is per-Worker, so staging keeps its own live counters.
