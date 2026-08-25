@@ -57,6 +57,32 @@ Notes:
 - Production (`dsh-store`) still deploys ONLY via the manual runbook above; never point a
   Builds deploy command at the production config.
 
+## Planned: converting production to Workers Builds
+
+Once the UAT worker has proven the Builds flow, production (`dsh-store`) is intended to
+adopt the SAME configuration. The 1:1 mapping, with the deliberate differences:
+
+- **Connect the repository to the EXISTING `dsh-store` Worker** (Connect repository on its
+  page) — never create a new Builds project/worker for production: a new worker would not
+  hold the custom-domain bindings, the D1/KV attachments, or the LiveStats DO state.
+- Root directory `/web`, build `npm install && npm run build`, deploy `npx wrangler deploy`
+  — identical to UAT.
+- **No `CLOUDFLARE_ENV` variable.** Its absence selects the top-level (production) config:
+  `dsh-store`, the three custom domains, the five-secret deploy gate. This is the only
+  intended difference from the UAT project.
+- Runtime secrets: production already carries its real values (`GITHUB_TOKEN`,
+  `INSTALL_CLIENT_HASH_SECRET`, `CATALOG_SYNC_TOKEN`, both OAuth secrets) — connecting
+  Builds does not touch them, and the production `CATALOG_SYNC_TOKEN` must NEVER be
+  replaced by the UAT one (it is paired with the catalog repo's Actions secret).
+
+Converting flips the deploy policy: pushes to `main` will deploy production, so the
+"deploys are a deliberate local act" rule above is retired at that moment, and the
+migration discipline REPLACING it becomes mandatory: apply D1 migrations BEFORE merging
+the change that needs them, and write code that tolerates both the old and the new schema
+(migration 0014 + the categories code is the reference example: table applied first, the
+Worker degrades loudly but safely without it). Update this document and AGENTS.md in the
+same change that flips the switch.
+
 ## Category-definitions rollout order (one-time, migration 0014)
 
 Categories moved from bundled code into D1. Both wrong orders break the catalog repo's
