@@ -27,19 +27,22 @@ committed `.dev.vars` value; the plugin detail endpoint uses it to read reposito
 ## Staging worker (pre-release twin)
 
 A staging Worker (`dsh-1024store`) can be bound to this repository's `main` via Cloudflare
-Workers Builds. It deploys the exact same bundle against the SAME production D1/KV, and
-differs from production only in Worker name and the absence of `routes` (it serves from
-workers.dev). Build command:
+Workers Builds. It is the `staging` environment declared in `web/wrangler.jsonc` (`env.staging`):
+the exact same bundle against the SAME production D1/KV, differing from production only in
+Worker name and the explicitly-empty `routes` (it serves from workers.dev). The Builds
+project uses stock commands — the environment is selected by a build variable, not a flag:
 
-```
-npm ci && npm run build --workspace @dsh-1024store/web && node web/scripts/make-staging-deploy-config.mjs
-```
+| Builds setting | Value |
+| --- | --- |
+| Root directory | `/web` |
+| Build command | `npm install && npm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Build variable | `CLOUDFLARE_ENV=staging` (plus `GITHUB_TOKEN` / `INSTALL_CLIENT_HASH_SECRET` build-time placeholders) |
 
-Deploy command:
-
-```
-npx wrangler deploy --config web/dist/dsh_store/wrangler.staging.json
-```
+The Cloudflare vite plugin reads `CLOUDFLARE_ENV` at build time and emits the
+staging-resolved deploy config, which the bare `npx wrangler deploy` then picks up.
+Without the variable the same two commands build and target production — which is why the
+variable lives in the staging Builds project and nowhere else.
 
 Notes:
 

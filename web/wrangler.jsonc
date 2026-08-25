@@ -95,5 +95,59 @@
     "traces": {
       "enabled": false
     }
+  },
+  "env": {
+    // 预发布环境：与生产同一份代码、同一套 D1/KV 数据面，只有两处不同——
+    // worker 名（隔离部署对象）与 routes（staging 绝不能碰生产自定义域，
+    // routes 是可继承字段，这里必须显式置空覆盖，不能省略）。
+    // 构建时设 CLOUDFLARE_ENV=staging（Workers Builds 的构建变量），
+    // vite 插件即产出本环境的部署配置，`npx wrangler deploy` 零参数生效。
+    // 绑定字段不可继承，必须与顶层逐项保持一致；改顶层绑定时同步改这里。
+    "staging": {
+      "name": "dsh-1024store",
+      "workers_dev": true,
+      "routes": [],
+      // staging 不强制 OAuth 两个 secret（登录功能在 staging 不启用）；
+      // 已设置的三个运行时 secret 见 web/docs/deployment.md。
+      "secrets": {
+        "required": []
+      },
+      "vars": {
+        "COMMUNITY_ADMIN_LOGINS": ""
+      },
+      "ai": {
+        "binding": "AI"
+      },
+      "kv_namespaces": [
+        {
+          "binding": "CATALOG_CACHE",
+          "id": "50a780cc01f9435d86b82ab46004f691"
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "CATALOG_DB",
+          "database_name": "dsh-store-star-history",
+          "database_id": "57006b9f-17e1-466f-b941-71c35cbff092",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "LIVE_STATS",
+            "class_name": "LiveStats"
+          }
+        ]
+      },
+      "version_metadata": {
+        "binding": "CF_VERSION_METADATA"
+      },
+      "assets": {
+        "binding": "ASSETS",
+        "not_found_handling": "single-page-application",
+        "run_worker_first": true
+      }
+    }
   }
 }
