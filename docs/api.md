@@ -41,9 +41,10 @@ latest manifest) are listed, star-ranked by default, and `packages` contains at 
 first 500 entries after filtering and sorting — every listed entry therefore carries a
 working npm install command. Browse-only plugins (no npm package) do not appear here; they
 remain on the website and, within its own 500-entry install-ranked cap, in
-`/api/v1/registry`. `meta.total` reports the number of matching
-installable plugins and `meta.catalogTotal` reports the full catalog size, installable or
-not.
+`/api/v1/registry`. `meta.total` equals `packages.length` and therefore reports the number
+of plugins actually included in this bounded response (at most 500). `meta.catalogTotal`
+reports the full catalog size, installable or not. This count invariant lets complete-list
+consumers accept the bounded compatibility projection without affecting any other API.
 For npm install methods, this frozen v1 projection emits both the current
 `published_package` code and its deprecated `repository_backlink` alias for the same
 `spec`/`revision`. Existing consumers may continue matching the old code; new integrations

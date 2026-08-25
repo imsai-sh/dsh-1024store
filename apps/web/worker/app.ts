@@ -392,8 +392,9 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
     // default sort), capped at V1_PLUGIN_LIMIT. Browse-only plugins never
     // reach it, so a partner site can render every listed entry with a
     // working install command. The response SHAPE stays frozen; this narrows
-    // content only. `catalogTotal` keeps meaning the whole catalog,
-    // installable or not.
+    // content only. `total` matches the bounded package array so complete-list
+    // consumers do not reject the response as truncated, while `catalogTotal`
+    // keeps meaning the whole catalog, installable or not.
     const installable = snapshot.snapshot.plugins.filter(
       (plugin) => offeredInstallCommand(plugin) !== null,
     )
@@ -401,12 +402,17 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       { ...snapshot, snapshot: { ...snapshot.snapshot, plugins: installable } },
       query,
     )
+    const packages = catalog.packages
+      .slice(0, V1_PLUGIN_LIMIT)
+      .map(projectV1InstallCodeAliases)
     const payload = JSON.stringify({
       ...catalog,
-      packages: catalog.packages
-        .slice(0, V1_PLUGIN_LIMIT)
-        .map(projectV1InstallCodeAliases),
-      meta: { ...catalog.meta, catalogTotal: snapshot.snapshot.plugins.length },
+      packages,
+      meta: {
+        ...catalog.meta,
+        total: packages.length,
+        catalogTotal: snapshot.snapshot.plugins.length,
+      },
     })
     context.header('Cache-Control', LIST_CACHE_HEADER)
     // Validator over the actual bytes, so a caller polling for changes is told

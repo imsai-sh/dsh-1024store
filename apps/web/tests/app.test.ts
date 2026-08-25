@@ -282,7 +282,7 @@ describe('market API', () => {
     expect(body.meta).toMatchObject({ total: 1, catalogTotal: TEST_PLUGINS.length })
   })
 
-  it('caps the compatibility catalog listing at 500 plugins while retaining full totals', async () => {
+  it('caps the star-ranked compatibility listing at 500 plugins and reports the returned count', async () => {
     const result = testCatalogResult()
     // TEST_PLUGINS[0] is npm-published, so every clone stays in the
     // installable v1 listing and only the cap trims the response.
@@ -295,6 +295,7 @@ describe('market API', () => {
         owner: 'partner',
         repository: `plugin-${suffix}`,
         url: `https://github.com/partner/plugin-${suffix}`,
+        stars: index,
       }
     })
     const app = createApp({
@@ -304,7 +305,7 @@ describe('market API', () => {
       })),
     })
 
-    const response = await app.request('/api/v1/plugins?sort=name')
+    const response = await app.request('/api/v1/plugins')
     const body = await response.json() as {
       packages: Array<{ name: string }>
       meta: { total: number; catalogTotal: number }
@@ -312,9 +313,10 @@ describe('market API', () => {
 
     expect(response.status).toBe(200)
     expect(body.packages).toHaveLength(500)
-    expect(body.packages[0]?.name).toBe('plugin-000')
-    expect(body.packages.at(-1)?.name).toBe('plugin-499')
-    expect(body.meta).toMatchObject({ total: 505, catalogTotal: 505 })
+    expect(body.packages[0]?.name).toBe('plugin-504')
+    expect(body.packages.at(-1)?.name).toBe('plugin-005')
+    expect(body.meta).toMatchObject({ total: 500, catalogTotal: 505 })
+    expect(body.meta.total).toBe(body.packages.length)
   })
 
   it('keeps browse-only plugins out of the v1 partner listing', async () => {

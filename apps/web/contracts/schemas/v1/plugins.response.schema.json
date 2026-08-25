@@ -33,8 +33,17 @@
       "type": "object",
       "required": ["total", "catalogTotal", "updated", "generatedAt", "revision", "source", "metricCoverage"],
       "properties": {
-        "total": { "type": "integer", "minimum": 0 },
-        "catalogTotal": { "type": "integer", "minimum": 0 },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 500,
+          "description": "Number of packages included in this bounded response; always equal to packages.length."
+        },
+        "catalogTotal": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of plugins in the complete catalog, including browse-only plugins omitted from this endpoint."
+        },
         "updated": { "type": "string" },
         "generatedAt": { "type": "string" },
         "revision": { "type": "string" },
