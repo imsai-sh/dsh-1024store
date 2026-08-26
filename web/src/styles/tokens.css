@@ -161,6 +161,13 @@
   --code-inline-bg: var(--surface-muted);
   --code-inline-ink: var(--p-neutral-800);
 
+  /* -- MyDSH 顶部入口 ---------------------------------------------------- */
+  --mydsh-banner-bg: var(--p-neutral-50);
+  --mydsh-banner-hover: var(--p-brand-50);
+  --mydsh-banner-ink: var(--p-neutral-800);
+  --mydsh-banner-muted: var(--p-neutral-600);
+  --mydsh-banner-focus: var(--p-brand-500);
+
   /* -- 选中 --------------------------------------------------------------- */
   --selection-bg: var(--p-brand-100);
   --selection-ink: var(--p-brand-900);

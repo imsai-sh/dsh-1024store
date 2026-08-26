@@ -5,6 +5,8 @@
   background: var(--canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  --mydsh-banner-height: 44px;
+  --mydsh-banner-offset: calc(var(--mydsh-banner-height) + env(safe-area-inset-top));
 }
 
 /* Integrated catalog masthead: brand, utilities, search, and view switching live
@@ -12,6 +14,99 @@
 body {
   background: var(--canvas);
   font-family: var(--font-body);
+}
+
+.mydsh-banner {
+  display: flex;
+  min-height: var(--mydsh-banner-offset);
+  align-items: flex-end;
+  padding:
+    env(safe-area-inset-top)
+    max(16px, env(safe-area-inset-right))
+    0
+    max(16px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line);
+  background: var(--mydsh-banner-bg);
+  color: var(--mydsh-banner-ink);
+  text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.mydsh-banner:hover {
+  background: var(--mydsh-banner-hover);
+  color: var(--mydsh-banner-ink);
+}
+
+.mydsh-banner:focus-visible {
+  outline: 3px solid var(--mydsh-banner-focus);
+  outline-offset: -3px;
+}
+
+.mydsh-banner-inner {
+  display: flex;
+  width: min(1180px, 100%);
+  min-height: var(--mydsh-banner-height);
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 0 auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.mydsh-banner-message,
+.mydsh-banner-domain {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.mydsh-banner-message {
+  max-width: 100%;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mydsh-banner-copy {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mydsh-banner-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.mydsh-banner-separator,
+.mydsh-banner-domain {
+  color: var(--mydsh-banner-muted);
+}
+
+.mydsh-banner-domain {
+  flex: none;
+  gap: 6px;
+}
+
+@media (max-width: 720px) {
+  .mydsh-banner-message {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .mydsh-banner-inner {
+    gap: 8px;
+    font-size: 11px;
+  }
+
+  .mydsh-banner-message {
+    gap: 4px;
+  }
+
 }
 
 .page-container,

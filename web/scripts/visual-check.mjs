@@ -58,6 +58,50 @@ async function assertNoHorizontalOverflow(page, label) {
   if (overflow) throw new Error(`${label} has horizontal overflow`)
 }
 
+async function assertMydshBanner(page, label, expectedCopy) {
+  const banner = page.locator('.mydsh-banner')
+  if ((await banner.count()) !== 1) {
+    throw new Error(`${label} should render exactly one MyDSH banner`)
+  }
+  const result = await banner.evaluate((node) => {
+    const box = node.getBoundingClientRect()
+    const icon = node.querySelector('.mydsh-banner-icon')
+    const messageBox = node.querySelector('.mydsh-banner-message')?.getBoundingClientRect()
+    const style = getComputedStyle(node)
+    return {
+      clientWidth: node.clientWidth,
+      height: Math.round(box.height),
+      href: node.getAttribute('href'),
+      iconLoaded: Boolean(icon?.complete && icon.naturalWidth > 0),
+      iconSource: icon?.getAttribute('src') ?? null,
+      messageCenter: messageBox ? Math.round(messageBox.left + messageBox.width / 2) : null,
+      position: style.position,
+      rel: node.getAttribute('rel'),
+      scrollWidth: node.scrollWidth,
+      target: node.getAttribute('target'),
+      text: node.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+      top: Math.round(box.top),
+      viewportCenter: Math.round(window.innerWidth / 2),
+    }
+  })
+  if (
+    result.href !== 'https://mydsh.run/'
+    || result.target !== '_blank'
+    || !result.rel?.includes('noreferrer')
+    || result.position !== 'static'
+    || result.top !== 0
+    || result.height < 44
+    || !result.iconLoaded
+    || !result.iconSource?.endsWith('/mydsh-icon.svg')
+    || result.scrollWidth > result.clientWidth + 1
+    || result.messageCenter !== result.viewportCenter
+    || !result.text.includes('MyDSH')
+    || !result.text.includes(expectedCopy)
+  ) {
+    throw new Error(`${label} has an incorrect MyDSH banner: ${JSON.stringify(result)}`)
+  }
+}
+
 // The hero clips decorative overflow, so document-level overflow alone cannot
 // detect an action row whose right edge was pushed outside the viewport.
 async function assertActionsWithinViewport(page, label) {
@@ -443,6 +487,7 @@ try {
   // 共用一份 SPA fallback，路由分流一旦错了会静默地渲染成另一个板块。
   const shell = await openPage({ width: 1500, height: 900 }, '/community')
   await shell.locator('.community-head').waitFor()
+  await assertMydshBanner(shell, 'desktop community', '云端运行dsh，避免隐私和插件冲突')
   const destinations = await shell.locator('.floating-nav .floating-nav-item').evaluateAll(
     (links) => links.map((link) => link.getAttribute('href')),
   )
@@ -496,9 +541,10 @@ try {
 
   const mobileShell = await openPage({ width: 390, height: 844 }, '/community', { touch: true })
   await mobileShell.locator('.community-head').waitFor()
+  await assertMydshBanner(mobileShell, 'mobile community', '云端运行dsh，避免隐私和插件冲突')
   await assertNoHorizontalOverflow(mobileShell, 'mobile community')
   await assertMinTouchTargets(mobileShell, 'mobile community actions', [
-    '.floating-wechat', '.floating-nav-item', '.tab', '.post-action',
+    '.mydsh-banner', '.floating-wechat', '.floating-nav-item', '.tab', '.post-action',
   ])
   // 窄屏下它收成左下角的横排胶囊，仍然常驻且不能撑破页面。
   const pill = await mobileShell.evaluate(() => {
@@ -514,6 +560,7 @@ try {
 
   const compactCommunity = await openPage({ width: 320, height: 568 }, '/community', { touch: true })
   await compactCommunity.locator('.community-head').waitFor()
+  await assertMydshBanner(compactCommunity, 'compact community', '云端运行dsh，避免隐私和插件冲突')
   await assertNoHorizontalOverflow(compactCommunity, 'compact community')
   await compactCommunity.close()
 
@@ -545,6 +592,7 @@ try {
   const chineseGeometry = await heroLanguageGeometry(desktop)
   await desktop.locator('.hero-language button').filter({ hasText: 'EN' }).click()
   await desktop.waitForFunction(() => document.documentElement.lang === 'en')
+  await assertMydshBanner(desktop, 'English desktop directory', 'Run DSH in the cloud, avoiding privacy and plugin conflicts')
   const englishGeometry = await heroLanguageGeometry(desktop)
   await assertHeroCommandsAligned(desktop, 'English desktop directory hero')
   await assertInstallCommandsReadable(desktop, 'English desktop directory hero', '.catalog-hero')
@@ -848,6 +896,7 @@ try {
   await assertActionsWithinViewport(mobile, 'mobile catalog')
   await assertVisibleSubdirectorySiblingsHaveDistinctTitles(mobile, 'mobile catalog')
   await assertMinTouchTargets(mobile, 'mobile catalog', [
+    '.mydsh-banner',
     '.floating-wechat',
     '.catalog-hero .hero-author',
     '.catalog-hero .github-link',
