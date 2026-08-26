@@ -3,19 +3,44 @@
 The configured D1 database is `dsh-store-star-history`; it stores both star history and the
 primary catalog. The Worker name is `dsh-store`. Both are legacy identifiers deliberately
 retained — renaming either detaches live production state (custom domains, D1/KV bindings,
-the LiveStats Durable Object). Apply migrations before deploying:
+the LiveStats Durable Object).
+
+**Production deploys automatically from `main`** via Cloudflare Workers Builds (same stock
+configuration as the UAT project below, with NO `CLOUDFLARE_ENV` variable — its absence
+selects the top-level production config). Landing a change on `main` IS publishing it.
+The manual path stays available as the emergency/fallback channel and behaves identically:
 
 ```bash
-npm ci
-npm run typecheck
-npm test
-npx wrangler d1 export CATALOG_DB --remote --output=catalog-backup-$(date +%Y%m%d-%H%M).sql
-npm run db:migrate:remote --workspace @dsh-1024store/web
-npm run deploy
+npm run deploy   # predeploy builds first; identical to what Builds runs
 ```
 
-Nothing deploys on a push: publishing is this local sequence, run deliberately, from an
-up-to-date `main` checkout only.
+Because code reaches production on merge, changes carrying a D1 migration follow one of
+two lanes. Reads never touch D1 (they serve the KV snapshot), so the exposure in either
+lane is only seconds of failed WRITES — install events retry from the client's local
+queue.
+
+**Additive migrations** (new tables, nullable columns — the common case): migrate FIRST,
+merge SECOND; the window is inherently harmless (migration 0014 + the categories code is
+the reference example):
+
+```bash
+npx wrangler d1 export CATALOG_DB --remote --output=../catalog-backup-$(date +%Y%m%d-%H%M).sql --config web/wrangler.jsonc
+npm run db:migrate:remote
+# only then merge/push the code that relies on the new schema
+```
+
+**Destructive migrations** (dropping/renaming columns, rebuilding tables): pick a quiet
+hour and run the migration and the deploy back-to-back via the manual channel — accept
+the few seconds of failed writes in between; no multi-step expand/contract dance needed:
+
+```bash
+npx wrangler d1 export CATALOG_DB --remote --output=../catalog-backup-$(date +%Y%m%d-%H%M).sql --config web/wrangler.jsonc
+npm run db:migrate:remote && npm run deploy   # back-to-back, seconds apart
+```
+
+The backup is the one non-negotiable in both lanes, and code must never PERSIST a bad
+state during a window (the snapshot builder refusing a category-less catalog is the
+pattern).
 
 Take the export before every migration and check that it restores (`sqlite3 tmp.db < backup.sql`).
 It is the only way back: a Worker cannot read a schema it predates, so rolling one back means
@@ -26,8 +51,8 @@ committed `.dev.vars` value; the plugin detail endpoint uses it to read reposito
 
 ## Staging worker (pre-release twin)
 
-A staging Worker (`dsh-1024store-uat`) can be bound to this repository's `main` via Cloudflare
-Workers Builds. It is the `uat` environment declared in `web/wrangler.jsonc` (`env.uat`):
+A staging Worker (`dsh-1024store-uat`) is bound to this repository's `uat` branch via
+Cloudflare Workers Builds. It is the `uat` environment declared in `web/wrangler.jsonc` (`env.uat`):
 the exact same bundle against the SAME production D1/KV, differing from production only in
 Worker name and the explicitly-empty `routes` (it serves from workers.dev). The Builds
 project uses stock commands — the environment is selected by a build variable, not a flag:
@@ -61,34 +86,27 @@ Notes:
 - The LiveStats counters are SHARED with production: `env.uat` binds the Durable Object
   with `script_name: "dsh-store"`, so /api/live and the view counters are the same object
   production serves.
-- Production (`dsh-store`) still deploys ONLY via the manual runbook above; never point a
-  Builds deploy command at the production config.
+- Production (`dsh-store`) deploys from `main` through its own Builds project. The two
+  projects differ in exactly two settings: the tracked branch (`uat` vs `main`) and the
+  `CLOUDFLARE_ENV` variable (present on UAT, absent on production). The flow is: push to
+  `uat` → verify on the UAT worker → merge to `main` → production deploys.
 
-## Planned: converting production to Workers Builds
+## Production via Workers Builds
 
-Once the UAT worker has proven the Builds flow, production (`dsh-store`) is intended to
-adopt the SAME configuration. The 1:1 mapping, with the deliberate differences:
+Production (`dsh-store`) is connected to this repository's `main` as a Workers Builds
+project ON THE EXISTING Worker (never recreate it: a new worker would not hold the
+custom-domain bindings, the D1/KV attachments, or the LiveStats DO state):
 
-- **Connect the repository to the EXISTING `dsh-store` Worker** (Connect repository on its
-  page) — never create a new Builds project/worker for production: a new worker would not
-  hold the custom-domain bindings, the D1/KV attachments, or the LiveStats DO state.
 - Root directory `/web`, build `npm install && npm run build`, deploy `npx wrangler deploy`
   — identical to UAT.
 - **No `CLOUDFLARE_ENV` variable.** Its absence selects the top-level (production) config:
   `dsh-store`, the three custom domains, the five-secret deploy gate. This is the only
   intended difference from the UAT project.
-- Runtime secrets: production already carries its real values (`GITHUB_TOKEN`,
-  `INSTALL_CLIENT_HASH_SECRET`, `CATALOG_SYNC_TOKEN`, both OAuth secrets) — connecting
-  Builds does not touch them, and the production `CATALOG_SYNC_TOKEN` must NEVER be
-  replaced by the UAT one (it is paired with the catalog repo's Actions secret).
-
-Converting flips the deploy policy: pushes to `main` will deploy production, so the
-"deploys are a deliberate local act" rule above is retired at that moment, and the
-migration discipline REPLACING it becomes mandatory: apply D1 migrations BEFORE merging
-the change that needs them, and write code that tolerates both the old and the new schema
-(migration 0014 + the categories code is the reference example: table applied first, the
-Worker degrades loudly but safely without it). Update this document and AGENTS.md in the
-same change that flips the switch.
+- Runtime secrets live on the Worker and survive every deploy; the production
+  `CATALOG_SYNC_TOKEN` must NEVER be replaced by the UAT one (it is paired with the
+  catalog repo's Actions secret).
+- The deploy gate validates the required secrets against the WORKER's stored secrets
+  (verified empirically), so no build variables are needed.
 
 ## Category-definitions rollout order (one-time, migration 0014)
 

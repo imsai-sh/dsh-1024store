@@ -68,8 +68,8 @@ npm run build
 
 ## 部署与环境
 
-- **生产**（`dsh-store`，deepseek1024.com 三域名）：显式本地发布，push 不会自动上线——完整 runbook 见 [web/docs/deployment.md](web/docs/deployment.md)
-- **UAT**（`dsh-1024store-uat`）：Cloudflare Workers Builds 绑定 `uat` 分支自动构建部署，与生产共享同一套 D1/KV 数据面，用于上线前验证
+- **生产**（`dsh-store`，deepseek1024.com 三域名）：合并进 `main` 即由 Workers Builds 自动构建部署；带 D1 迁移的变更必须**先迁移后合并**——纪律与应急手动通道见 [web/docs/deployment.md](web/docs/deployment.md)
+- **UAT**（`dsh-1024store-uat`）：绑定 `uat` 分支、同一套构建，仅多一个 `CLOUDFLARE_ENV=uat` 构建变量；与生产共享 D1/KV 数据面，先推 `uat` 验证、再合 `main` 上线
 - 安装统计的口径、隐私边界与 npm 发布流程见 [web/docs/install-analytics.md](web/docs/install-analytics.md)
 
 ## 社区

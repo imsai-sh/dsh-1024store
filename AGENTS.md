@@ -63,17 +63,15 @@ Four ways this gets broken, in rough order of likelihood:
    not a patch. Deploying with a custom domain missing unbinds it, and requests to the dropped
    hostname start failing with `522`. Always keep all three entries; only ever add.
 
-Deploying is a deliberate local act, not a consequence of pushing: run `npm run deploy` (its
-`predeploy` builds first). Landing a change on `main` publishes nothing until someone does.
-When the change carries a D1 migration, export a backup first, apply the migration, and only
-then deploy — the Worker and the schema must move together, and a Worker deployed against the
-old schema cannot read the catalog:
-
-```bash
-npx wrangler d1 export CATALOG_DB --remote --output=catalog-backup-$(date +%Y%m%d-%H%M).sql
-npm run db:migrate:remote --workspace @dsh-1024store/web
-npm run deploy
-```
+**Landing a change on `main` IS deploying it**: production (`dsh-store`) auto-deploys from
+`main` via Cloudflare Workers Builds (UAT deploys the same way with `CLOUDFLARE_ENV=uat`;
+`npm run deploy` remains the identical manual/emergency path). For changes carrying a
+D1 migration: ADDITIVE migrations (the common case) are applied before merging and the
+window is harmless; DESTRUCTIVE migrations run back-to-back with a manual deploy in a
+quiet hour (`npm run db:migrate:remote && npm run deploy`), accepting seconds of failed
+writes — reads serve the KV snapshot and never notice. A backup before every migration is
+non-negotiable, and code must never persist a bad state mid-window. Full lanes in
+`web/docs/deployment.md`.
 
 Extend `web/tests/public-api.test.ts` whenever you change which host serves what.
 

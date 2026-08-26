@@ -20,8 +20,9 @@ submissions do not belong here** — submit plugins to the catalog repository,
 `GET /api/v1/plugins` and `GET /api/v1/registry` response shapes are frozen — third-party
 consumers depend on them. Additive changes go to versioned v2/v3 routes. See
 [web/docs/api.md](web/docs/api.md) and [AGENTS.md](AGENTS.md) for the full invariants, and
-[web/docs/deployment.md](web/docs/deployment.md) for how deploys work (they are explicit
-local acts; nothing deploys on a push).
+[web/docs/deployment.md](web/docs/deployment.md) for how deploys work (merging to `main`
+auto-deploys production via Workers Builds, so D1 migrations must be applied BEFORE the
+code that needs them merges).
 
 ## License
 
