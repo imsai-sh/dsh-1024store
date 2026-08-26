@@ -49,11 +49,17 @@ Notes:
 - Staging shares production data: install events, community writes, and quota counters
   from staging land in the production D1. `POST /api/v1/catalog/sync` on staging rebuilds
   the shared KV snapshot (idempotent, same data).
-- Copy the production secret values onto the staging Worker (`wrangler secret put … --env
-  uat`, run from `web/`) so hashing and sync behave identically. GitHub OAuth login needs its own
-  OAuth App (the callback URL is origin-derived), so it stays unconfigured on staging
-  unless deliberately set up.
-- The LiveStats Durable Object is per-Worker, so staging keeps its own live counters.
+- UAT is a FULL production mirror, secrets included: set the SAME values production uses
+  (`wrangler secret put … --env uat`, run from `web/`). `INSTALL_CLIENT_HASH_SECRET` in
+  particular must equal production's — the D1 install-event ledger is shared, and a
+  different salt would hash the same client to a different identity.
+- GitHub OAuth needs a UAT-dedicated OAuth App (GitHub allows exactly one callback URL per
+  app, and the callback is origin-derived): callback
+  `https://<uat-host>/api/v1/auth/github/callback`, then put `GITHUB_OAUTH_CLIENT_ID` /
+  `GITHUB_OAUTH_CLIENT_SECRET` with `--env uat`.
+- The LiveStats counters are SHARED with production: `env.uat` binds the Durable Object
+  with `script_name: "dsh-store"`, so /api/live and the view counters are the same object
+  production serves.
 - Production (`dsh-store`) still deploys ONLY via the manual runbook above; never point a
   Builds deploy command at the production config.
 

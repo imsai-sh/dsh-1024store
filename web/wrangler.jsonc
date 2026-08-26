@@ -137,7 +137,10 @@
         "bindings": [
           {
             "name": "LIVE_STATS",
-            "class_name": "LiveStats"
+            "class_name": "LiveStats",
+            // 跨 worker 绑定到生产的 LiveStats 命名空间：UAT 与生产共享同一个
+            // 在线人数/浏览计数器（与共享 D1/KV 同一原则——UAT 是生产的完整镜像）。
+            "script_name": "dsh-store"
           }
         ]
       },
