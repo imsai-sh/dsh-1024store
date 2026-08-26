@@ -53,10 +53,11 @@ Notes:
   (`wrangler secret put … --env uat`, run from `web/`). `INSTALL_CLIENT_HASH_SECRET` in
   particular must equal production's — the D1 install-event ledger is shared, and a
   different salt would hash the same client to a different identity.
-- GitHub OAuth needs a UAT-dedicated OAuth App (GitHub allows exactly one callback URL per
-  app, and the callback is origin-derived): callback
-  `https://<uat-host>/api/v1/auth/github/callback`, then put `GITHUB_OAUTH_CLIENT_ID` /
-  `GITHUB_OAUTH_CLIENT_SECRET` with `--env uat`.
+- GitHub OAuth reuses the PRODUCTION app: register the UAT callback
+  (`https://<uat-host>/api/v1/auth/github/callback`) as an additional callback URL on the
+  same GitHub app, then put the production `GITHUB_OAUTH_CLIENT_ID` /
+  `GITHUB_OAUTH_CLIENT_SECRET` with `--env uat`. All five UAT secrets carry the exact
+  production values.
 - The LiveStats counters are SHARED with production: `env.uat` binds the Durable Object
   with `script_name: "dsh-store"`, so /api/live and the view counters are the same object
   production serves.
