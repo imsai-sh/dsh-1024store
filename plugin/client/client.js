@@ -544,6 +544,12 @@ function MarketShell({ locale, onClose, activation }) {
   }, [connectFrame, embedUrl])
 
   const frameLoaded = useCallback(() => {
+    // The embedded page posts `init` once per document, so a `load` event that
+    // arrives after the handshake must leave the live bridge alone: closing it
+    // here would strand the panel on the readiness timeout and replace a working
+    // store with the error face. Observed when a slow or blocked subresource
+    // pushes `load` past the `ready` reply.
+    if (portRef.current !== null) return
     closeBridge()
     setConnection('connecting')
     readyTimerRef.current = window.setTimeout(() => setConnection('failed'), READY_TIMEOUT_MS)
