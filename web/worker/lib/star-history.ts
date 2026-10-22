@@ -6,7 +6,6 @@ const BASELINE_TOLERANCE_MS = 2 * HOUR_MS
 const MIN_PARTIAL_BASELINE_AGE_MS = HOUR_MS
 const INSERT_ROWS_PER_STATEMENT = 25
 const REPOSITORIES_PER_LOOKUP = 80
-const EARLIEST_LOOKUPS_PER_BATCH = 50
 
 const WINDOWS = {
   growth24h: DAY_MS,
@@ -79,6 +78,12 @@ export async function recordStarSnapshots(
       capturedAt,
       plugin.stars as number,
     ])
+    // Only a changed star count is worth a write. captured_at is new on every
+    // pass, so a guard that compared it too was a no-op: the collector's ~11
+    // refreshes an hour rewrote every repository's row, and D1 bills every
+    // rewrite as a row written (~3M rows a day). An unchanged row keeps the
+    // hour's first captured_at, well inside the ±2h baseline tolerance that
+    // loadStarGrowth already allows. Mirrors the collector's copy of this file.
     return db.prepare(`
       INSERT INTO github_star_snapshots (
         repository,
@@ -89,6 +94,7 @@ export async function recordStarSnapshots(
       ON CONFLICT(repository, bucket_hour) DO UPDATE SET
         captured_at = excluded.captured_at,
         star_count = excluded.star_count
+      WHERE github_star_snapshots.star_count IS NOT excluded.star_count
     `).bind(...values)
   })
 
@@ -100,19 +106,19 @@ async function loadEarliestSnapshots(
   repositories: string[],
 ): Promise<Map<string, SnapshotRow>> {
   const earliest = new Map<string, SnapshotRow>()
-  for (const repositoryBatch of chunks(repositories, EARLIEST_LOOKUPS_PER_BATCH)) {
-    const statements = repositoryBatch.map((repository) => db.prepare(`
-      SELECT repository, bucket_hour, captured_at, star_count
-      FROM github_star_snapshots
-      WHERE repository = ?
-      ORDER BY bucket_hour ASC
-      LIMIT 1
-    `).bind(repository))
-    const results = await db.batch<SnapshotRow>(statements)
-    for (const result of results) {
-      const row = result.results?.[0]
-      if (row) earliest.set(row.repository.toLocaleLowerCase(), row)
-    }
+  for (const repositoryBatch of chunks(repositories, REPOSITORIES_PER_LOOKUP)) {
+    // One indexed earliest-row seek per repository, in one statement per 80
+    // repositories. GROUP BY MIN would scan their entire histories again.
+    const result = await db.prepare(`
+      WITH wanted(repository) AS (VALUES ${repositoryBatch.map(() => '(?)').join(',')})
+      SELECT s.repository, s.bucket_hour, s.captured_at, s.star_count
+      FROM wanted w JOIN github_star_snapshots s
+        ON s.repository = w.repository AND s.bucket_hour = (
+          SELECT bucket_hour FROM github_star_snapshots first
+          WHERE first.repository = w.repository ORDER BY bucket_hour ASC LIMIT 1
+        )
+    `).bind(...repositoryBatch).all<SnapshotRow>()
+    for (const row of result.results) earliest.set(row.repository.toLocaleLowerCase(), row)
   }
   return earliest
 }
@@ -151,20 +157,22 @@ export async function loadStarGrowth(
 
   for (const repositoryBatch of chunks(repositories, REPOSITORIES_PER_LOOKUP)) {
     const repositoryPlaceholders = repositoryBatch.map(() => '?').join(', ')
-    const ranges = Object.values(targets).flatMap((target) => [
-      hourBucket(target - BASELINE_TOLERANCE_MS),
-      hourBucket(target + BASELINE_TOLERANCE_MS),
-    ])
-    const result = await db.prepare(`
-      SELECT repository, bucket_hour, captured_at, star_count
-      FROM github_star_snapshots
-      WHERE repository IN (${repositoryPlaceholders})
-        AND (
-          bucket_hour BETWEEN ? AND ?
-          OR bucket_hour BETWEEN ? AND ?
-          OR bucket_hour BETWEEN ? AND ?
-        )
-    `).bind(...repositoryBatch, ...ranges).all<SnapshotRow>()
+    // Separate ranges let SQLite seek on BOTH columns of the primary key. The
+    // old OR predicate only narrowed by repository and read each repository's
+    // entire lifetime: ~130K rows a batch, ~19M rows a catalog rebuild.
+    const results = await db.batch<SnapshotRow>(Object.values(targets).map((target) =>
+      db.prepare(`
+        SELECT repository, bucket_hour, captured_at, star_count
+        FROM github_star_snapshots
+        WHERE repository IN (${repositoryPlaceholders})
+          AND bucket_hour BETWEEN ? AND ?
+      `).bind(
+        ...repositoryBatch,
+        hourBucket(target - BASELINE_TOLERANCE_MS),
+        hourBucket(target + BASELINE_TOLERANCE_MS),
+      ),
+    ))
+    const result = { results: results.flatMap((batchResult) => batchResult.results ?? []) }
 
     for (const row of result.results) {
       const key = row.repository.toLocaleLowerCase()

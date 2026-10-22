@@ -32,11 +32,13 @@ function mockD1(rows: unknown[] = [], earliestRows: SnapshotRowFixture[] = []) {
       },
       async all() {
         if (isEarliestLookup(sql)) {
-          const repository = String(call.params[0]).toLocaleLowerCase()
+          const repositories = new Set(call.params.map((p) => String(p).toLocaleLowerCase()))
           const matches = earliestRows
-            .filter((row) => row.repository.toLocaleLowerCase() === repository)
+            .filter((row) => repositories.has(row.repository.toLocaleLowerCase()))
             .sort((left, right) => left.bucket_hour - right.bucket_hour)
-          return { results: matches.slice(0, 1) }
+          const earliest = new Map<string, SnapshotRowFixture>()
+          for (const row of matches) if (!earliest.has(row.repository)) earliest.set(row.repository, row)
+          return { results: [...earliest.values()] }
         }
         return { results: rows }
       },
@@ -66,6 +68,7 @@ describe('GitHub star history', () => {
     expect(batch).toHaveBeenCalledOnce()
     expect(calls).toHaveLength(1)
     expect(calls[0]?.sql).toContain('ON CONFLICT(repository, bucket_hour) DO UPDATE')
+    expect(calls[0]?.sql).toContain('WHERE github_star_snapshots.star_count IS NOT excluded.star_count')
     expect(calls[0]?.params.slice(0, 4)).toEqual([
       'openma-ai/deepseek-harness-tui',
       hourBucket(capturedAt),
@@ -121,7 +124,9 @@ describe('GitHub star history', () => {
 
     await loadStarGrowth(db, [TEST_PLUGINS[0]!], capturedAt)
 
-    expect(batch).not.toHaveBeenCalled()
+    // One batch of three window lookups, and no earliest-snapshot statement.
+    expect(batch).toHaveBeenCalledOnce()
+    expect(batch.mock.calls[0]![0]).toHaveLength(3)
   })
 
   it('falls back to the earliest snapshot while history is shorter than the window', async () => {
