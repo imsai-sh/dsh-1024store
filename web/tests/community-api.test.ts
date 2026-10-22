@@ -20,7 +20,14 @@ function app(clock: () => number = () => NOW) {
   return communityApp({ clock })
 }
 
-/** A signed-in browser: the cookie the main site's OAuth callback would have set. */
+/**
+ * A signed-in browser: the cookie the main site's OAuth callback would have set.
+ *
+ * The session is minted on the real clock, like the callback does, because
+ * `currentUser` validates it against `Date.now()`, not the suite's frozen
+ * NOW. Minted at NOW it expired for good 30 days later (2026-09-16), and
+ * every authenticated request here answered 401 from then on.
+ */
 async function signIn(database: DatabaseSync, login: string, githubId: number): Promise<string> {
   const db = sqliteD1(database)
   const user = await upsertGitHubUser(
@@ -28,7 +35,7 @@ async function signIn(database: DatabaseSync, login: string, githubId: number): 
     { id: githubId, login, name: null, avatarUrl: null },
     new Date(NOW).toISOString(),
   )
-  const session = await createSession(db, user.id, NOW)
+  const session = await createSession(db, user.id, Date.now())
   return `dsh_session=${session.token}`
 }
 
