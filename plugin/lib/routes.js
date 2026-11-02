@@ -312,10 +312,15 @@ function requireMethod(request, response, method) {
     response.end();
     return false;
 }
-function requireTrustedPost(request, response) {
+function requireTrustedPost(request, response, authenticatePreferenceRequest) {
     if (!requireMethod(request, response, 'POST'))
         return false;
     if (isSameOrigin(request))
+        return true;
+    // Desktop forwards a signed Host cookie but deliberately removes Origin.
+    // Only the preferences route opts into the Host's authenticated trust check;
+    // an absent Origin (or a cookie header by itself) is never sufficient.
+    if (request.headers.origin === undefined && authenticatePreferenceRequest?.(request) === true)
         return true;
     sendJson(response, 403, { error: 'untrusted origin' });
     return false;
@@ -324,9 +329,10 @@ function requireTrustedPost(request, response) {
  * Register the local market API and return a disposer for every route.
  * @param webServer - DSH web server service.
  * @param config - resolved profile and registry settings.
+ * @param authenticatePreferenceRequest - optional Host-owned authentication for Origin-less preference writes.
  * @returns a disposer that unregisters all market routes.
  */
-export function mountMarketRoutes(webServer, config) {
+export function mountMarketRoutes(webServer, config, authenticatePreferenceRequest) {
     if (!PROFILE_RE.test(config.profile))
         throw new Error(`invalid profile name: ${config.profile}`);
     const registryUrl = new URL(config.registryUrl);
@@ -386,7 +392,7 @@ export function mountMarketRoutes(webServer, config) {
                     sendJson(response, 200, { sidebarEntry: await resolveSidebarEntry() });
                     return;
                 }
-                if (!requireTrustedPost(request, response))
+                if (!requireTrustedPost(request, response, authenticatePreferenceRequest))
                     return;
                 try {
                     const body = await readJsonBody(request);

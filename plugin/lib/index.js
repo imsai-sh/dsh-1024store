@@ -24,6 +24,12 @@ export function apply(ctx, config = {}) {
     };
     ctx.inject(['webServer'], hostContext => {
         const host = hostContext;
-        host.effect(() => mountMarketRoutes(host.webServer, resolved), 'dsh1024: http routes');
+        host.effect(() => mountMarketRoutes(host.webServer, resolved, request => {
+            // Resolve the active service for every write, so older Hosts and a
+            // disposed/reloading Connection fail closed without blocking Web use.
+            const connection = host.get('connection');
+            return typeof connection?.requestRejection === 'function'
+                && connection.requestRejection(request) === undefined;
+        }), 'dsh1024: http routes');
     });
 }

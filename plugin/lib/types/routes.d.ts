@@ -16,6 +16,8 @@ export interface MarketRouteConfig {
     embedUrl: string;
     sidebarEntry: boolean;
 }
+/** Host-owned authentication for Desktop requests whose Origin is removed by its bridge. */
+export type AuthenticatePreferenceRequest = (request: IncomingMessage) => boolean;
 /**
  * Parse the full official command the embedded page asks to run.
  *
@@ -43,6 +45,7 @@ export declare function isTrustedSameOrigin(origin: string | undefined, host: st
  * Register the local market API and return a disposer for every route.
  * @param webServer - DSH web server service.
  * @param config - resolved profile and registry settings.
+ * @param authenticatePreferenceRequest - optional Host-owned authentication for Origin-less preference writes.
  * @returns a disposer that unregisters all market routes.
  */
-export declare function mountMarketRoutes(webServer: WebServerService, config: MarketRouteConfig): () => void;
+export declare function mountMarketRoutes(webServer: WebServerService, config: MarketRouteConfig, authenticatePreferenceRequest?: AuthenticatePreferenceRequest): () => void;
