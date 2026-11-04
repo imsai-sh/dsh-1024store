@@ -5,6 +5,8 @@
   background: var(--canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  --fish-pocket-banner-height: 44px;
+  --fish-pocket-banner-offset: calc(var(--fish-pocket-banner-height) + env(safe-area-inset-top));
 }
 
 /* Integrated catalog masthead: brand, utilities, search, and view switching live
@@ -12,6 +14,110 @@
 body {
   background: var(--canvas);
   font-family: var(--font-body);
+}
+
+.fish-pocket-banner {
+  display: flex;
+  min-height: var(--fish-pocket-banner-offset);
+  align-items: flex-end;
+  padding:
+    env(safe-area-inset-top)
+    max(16px, env(safe-area-inset-right))
+    0
+    max(16px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line);
+  background: var(--fish-pocket-banner-bg);
+  color: var(--fish-pocket-banner-ink);
+  text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.fish-pocket-banner:hover {
+  background: var(--fish-pocket-banner-hover);
+  color: var(--fish-pocket-banner-ink);
+}
+
+.fish-pocket-banner:focus-visible {
+  outline: 3px solid var(--fish-pocket-banner-focus);
+  outline-offset: -3px;
+}
+
+.fish-pocket-banner-inner {
+  display: flex;
+  width: min(1180px, 100%);
+  min-height: var(--fish-pocket-banner-height);
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 0 auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.fish-pocket-banner-message,
+.fish-pocket-banner-domain {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.fish-pocket-banner-message {
+  max-width: 100%;
+  justify-content: center;
+  gap: 8px;
+}
+
+.fish-pocket-banner-copy {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fish-pocket-banner-message strong {
+  flex: none;
+  white-space: nowrap;
+}
+
+.fish-pocket-banner-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.fish-pocket-banner-separator,
+.fish-pocket-banner-domain {
+  color: var(--fish-pocket-banner-muted);
+}
+
+.fish-pocket-banner-domain {
+  flex: none;
+  gap: 6px;
+}
+
+@media (max-width: 720px) {
+  .fish-pocket-banner-message {
+    gap: 6px;
+  }
+
+  /* Narrow screens keep only the external-link glyph so the pitch gets the room. */
+  .fish-pocket-banner-domain-separator,
+  .fish-pocket-banner-domain-label {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .fish-pocket-banner-inner {
+    gap: 8px;
+    font-size: 11px;
+  }
+
+  .fish-pocket-banner-message {
+    gap: 4px;
+  }
+
 }
 
 .page-container,
