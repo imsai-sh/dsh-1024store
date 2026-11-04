@@ -6,6 +6,11 @@
 > [deepseek1024.com](https://deepseek1024.com/) site + Cloudflare Worker, the in-`dsh`
 > 1024 Store plugin, the install-tracking wrapper CLI, and a free public query API.
 
+> [!TIP]
+> **新开源项目：[Fish Pocket](https://github.com/imsai-sh/fish-pocket)**
+>
+> 让 DeepSeek Harness 运行在 iPhone 和 iPad 上，随时随地使用。欢迎 Star 关注、一起共建。
+
 [![DSH 1024Store 插件市场首页](https://raw.githubusercontent.com/imsai-sh/awesome-deepseek-harness-plugins/assets/homepage.zh.png)](https://deepseek1024.com/)
 
 [在线网站](https://deepseek1024.com/) · [API 文档](web/docs/api.md) · [npm 包 dsh1024](https://www.npmjs.com/package/dsh1024) · [插件目录仓库](https://github.com/imsai-sh/awesome-deepseek-harness-plugins) · [提交插件](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/blob/main/CONTRIBUTING.md)
