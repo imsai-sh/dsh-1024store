@@ -32,6 +32,9 @@ export interface MarketRouteConfig {
   sidebarEntry: boolean
 }
 
+/** Host-owned authentication for Desktop requests whose Origin is removed by its bridge. */
+export type AuthenticatePreferenceRequest = (request: IncomingMessage) => boolean
+
 interface CommandResult {
   exitCode: number | null
   timedOut: boolean
@@ -382,9 +385,17 @@ function requireMethod(request: IncomingMessage, response: ServerResponse, metho
   return false
 }
 
-function requireTrustedPost(request: IncomingMessage, response: ServerResponse): boolean {
+function requireTrustedPost(
+  request: IncomingMessage,
+  response: ServerResponse,
+  authenticatePreferenceRequest?: AuthenticatePreferenceRequest,
+): boolean {
   if (!requireMethod(request, response, 'POST')) return false
   if (isSameOrigin(request)) return true
+  // Desktop forwards a signed Host cookie but deliberately removes Origin.
+  // Only the preferences route opts into the Host's authenticated trust check;
+  // an absent Origin (or a cookie header by itself) is never sufficient.
+  if (request.headers.origin === undefined && authenticatePreferenceRequest?.(request) === true) return true
   sendJson(response, 403, { error: 'untrusted origin' })
   return false
 }
@@ -393,9 +404,14 @@ function requireTrustedPost(request: IncomingMessage, response: ServerResponse):
  * Register the local market API and return a disposer for every route.
  * @param webServer - DSH web server service.
  * @param config - resolved profile and registry settings.
+ * @param authenticatePreferenceRequest - optional Host-owned authentication for Origin-less preference writes.
  * @returns a disposer that unregisters all market routes.
  */
-export function mountMarketRoutes(webServer: WebServerService, config: MarketRouteConfig): () => void {
+export function mountMarketRoutes(
+  webServer: WebServerService,
+  config: MarketRouteConfig,
+  authenticatePreferenceRequest?: AuthenticatePreferenceRequest,
+): () => void {
   if (!PROFILE_RE.test(config.profile)) throw new Error(`invalid profile name: ${config.profile}`)
   const registryUrl = new URL(config.registryUrl)
   if (registryUrl.protocol !== 'https:') throw new Error('registry API URL must use HTTPS')
@@ -451,7 +467,7 @@ export function mountMarketRoutes(webServer: WebServerService, config: MarketRou
           sendJson(response, 200, { sidebarEntry: await resolveSidebarEntry() })
           return
         }
-        if (!requireTrustedPost(request, response)) return
+        if (!requireTrustedPost(request, response, authenticatePreferenceRequest)) return
         try {
           const body = await readJsonBody(request) as { sidebarEntry?: unknown }
           if (typeof body.sidebarEntry !== 'boolean') {

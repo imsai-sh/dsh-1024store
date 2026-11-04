@@ -1,6 +1,7 @@
 /** 1024 Store market host plugin. */
 
 import type { Context } from '@deepseek-ai/cordis'
+import type { IncomingMessage } from 'node:http'
 import { DEFAULT_REGISTRY_URL } from './registry.ts'
 import { mountMarketRoutes, type WebServerService } from './routes.ts'
 import { DEFAULT_UPDATE_URL } from './update.ts'
@@ -25,6 +26,10 @@ interface MarketContext extends Context {
   webServer: WebServerService
 }
 
+interface HostConnection {
+  requestRejection?: (request: Pick<IncomingMessage, 'headers'>) => 401 | 403 | undefined
+}
+
 function argvProfile(): string | undefined {
   const index = process.argv.indexOf('--profile')
   const candidate = index >= 0 ? process.argv[index + 1] : undefined
@@ -47,7 +52,13 @@ export function apply(ctx: Context, config: Config = {}): void {
   ctx.inject(['webServer'], hostContext => {
     const host = hostContext as MarketContext
     host.effect(
-      () => mountMarketRoutes(host.webServer, resolved),
+      () => mountMarketRoutes(host.webServer, resolved, request => {
+        // Resolve the active service for every write, so older Hosts and a
+        // disposed/reloading Connection fail closed without blocking Web use.
+        const connection = host.get('connection') as HostConnection | undefined
+        return typeof connection?.requestRejection === 'function'
+          && connection.requestRejection(request) === undefined
+      }),
       'dsh1024: http routes',
     )
   })
