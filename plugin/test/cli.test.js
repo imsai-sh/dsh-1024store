@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import test from 'node:test'
 import { main } from '../cli/index.js'
 import { CLI_VERSION, EVENT_KEYS, SELF_PLUGIN_ID } from '../cli/constants.js'
+import { findOfficialCliOnPath } from '../cli/plugin.js'
 
 function fakeChild({ status = 0, error = null } = {}) {
   const child = new EventEmitter()
@@ -216,6 +217,67 @@ test('uses the npm JavaScript entrypoint on Windows and preserves argument bound
     '%PATH%',
   ])
   assert.equal(invocation.options.shell, false)
+})
+
+test('starts a Windows .cmd shim through a quoted shell', async () => {
+  const dshHome = await makeHome()
+  const shim = 'C:\\Program Files\\DeepSeek Harness\\resources\\runtime\\cli\\bin\\dsh.cmd'
+  let invocation
+  const exitCode = await main(['plugin', '--profile', 'desktop', 'add', 'github:owner/repo'], {
+    dshHome,
+    env: {
+      DO_NOT_TRACK: '1',
+      PATH: 'C:\\Program Files\\DeepSeek Harness\\resources\\runtime\\cli\\bin',
+      PATHEXT: '.COM;.EXE;.BAT;.CMD',
+    },
+    execPath: 'C:\\Program Files\\nodejs\\node.exe',
+    platform: 'win32',
+    canExecute: (candidate) => candidate === shim,
+    io: ioCapture().io,
+    spawn(command, args, options) {
+      invocation = { command, args, options }
+      installProfile(dshHome, 'desktop')
+      return fakeChild()
+    },
+  })
+
+  assert.equal(exitCode, 0)
+  // Quoted as well as shelled: the launcher's default install path has spaces.
+  assert.equal(invocation.command, `"${shim}"`)
+  assert.equal(invocation.options.shell, true)
+  assert.deepEqual(invocation.args, ['plugin', '--profile', 'desktop', 'add', 'github:owner/repo'])
+})
+
+test('spawns a native Windows entry without a shell', async () => {
+  const dshHome = await makeHome()
+  let invocation
+  const exitCode = await main(['plugin', '--profile', 'web', 'add', 'github:owner/repo'], {
+    dshHome,
+    env: { DO_NOT_TRACK: '1', PATH: 'C:\\bin', PATHEXT: '.COM;.EXE;.BAT;.CMD' },
+    execPath: 'C:\\Program Files\\nodejs\\node.exe',
+    platform: 'win32',
+    canExecute: (candidate) => candidate === 'C:\\bin\\dsh.exe',
+    io: ioCapture().io,
+    spawn(command, args, options) {
+      invocation = { command, args, options }
+      installProfile(dshHome)
+      return fakeChild()
+    },
+  })
+
+  assert.equal(exitCode, 0)
+  assert.equal(invocation.command, 'C:\\bin\\dsh.exe')
+  assert.equal(invocation.options.shell, false)
+})
+
+test('still reuses a directly spawnable Windows entry', () => {
+  const found = findOfficialCliOnPath({
+    env: { PATH: 'C:\\tools;C:\\other', PATHEXT: '.COM;.EXE;.BAT;.CMD' },
+    platformName: 'win32',
+    canExecute: (candidate) => candidate.toLowerCase().endsWith('.exe'),
+  })
+
+  assert.equal(found, 'C:\\tools\\dsh.exe')
 })
 
 test('bounds the reported DSH version to the Worker contract', async () => {
@@ -776,7 +838,8 @@ test('resolves dsh through PATHEXT on Windows', async () => {
   })
 
   assert.equal(exitCode, 0)
-  assert.equal(invocation.command, 'C:\\bin\\dsh.cmd')
+  assert.equal(invocation.command, '"C:\\bin\\dsh.cmd"')
+  assert.equal(invocation.options.shell, true)
   assert.deepEqual(invocation.args, [
     'plugin',
     '--profile',
