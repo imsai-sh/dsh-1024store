@@ -32,6 +32,16 @@ function officialDshVersion(packageSpec, env) {
   return separator > slash ? packageSpec.slice(separator + 1, separator + 65) : null
 }
 
+/**
+ * Windows extensions that name a shell script rather than an executable image.
+ *
+ * `spawn(file, ..., { shell: false })` throws EINVAL for these — Node has
+ * rejected `.cmd`/`.bat` that way since the CVE-2024-27980 hardening — so the
+ * official CLI's launcher, which the desktop application ships as `dsh.cmd`,
+ * has to be started through a shell instead of executed directly.
+ */
+const WINDOWS_SHELL_SCRIPT_EXTENSIONS = new Set(['.cmd', '.bat'])
+
 function isExecutableFile(candidate, canExecute) {
   try {
     return canExecute(candidate) === true
@@ -51,6 +61,12 @@ function defaultCanExecute(candidate) {
  * Reusing it skips the npx resolution step on every single install, which is
  * the bulk of the wrapper's overhead. Returns null when nothing is found, and
  * the caller falls back to `npx --yes <package>`.
+ *
+ * A Windows `.cmd`/`.bat` entry is a shell script, so the caller starts it
+ * through a shell rather than executing it. It stays a candidate on purpose:
+ * the desktop application's own launcher is `dsh.cmd`, and only that launcher
+ * may manage the application's profile — the npx fallback is a separate dsh
+ * that refuses it.
  */
 export function findOfficialCliOnPath(context) {
   const { env, platformName, canExecute = defaultCanExecute } = context
@@ -96,7 +112,15 @@ function officialCliInvocation(officialPackage, context) {
   // and skips npx's resolution on every install.
   if (!context.packageOverridden) {
     const onPath = findOfficialCliOnPath(context)
-    if (onPath) return { file: onPath, prefixArgs: [], useShell: false }
+    if (onPath) {
+      // The desktop application's launcher is a `.cmd` shim under a path that
+      // contains spaces, so it needs a shell as well as quoting. A native
+      // executable is spawned directly, which keeps argument boundaries exact.
+      const shellScript = context.platformName === 'win32'
+        && WINDOWS_SHELL_SCRIPT_EXTENSIONS.has(win32Path.extname(onPath).toLowerCase())
+      if (shellScript) return { file: `"${onPath}"`, prefixArgs: [], useShell: true }
+      return { file: onPath, prefixArgs: [], useShell: false }
+    }
   }
 
   if (context.platformName !== 'win32') {
