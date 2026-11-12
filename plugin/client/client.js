@@ -544,10 +544,18 @@ function MarketShell({ locale, onClose, activation }) {
   }, [connectFrame, embedUrl])
 
   const frameLoaded = useCallback(() => {
-    closeBridge()
-    setConnection('connecting')
-    readyTimerRef.current = window.setTimeout(() => setConnection('failed'), READY_TIMEOUT_MS)
-  }, [closeBridge])
+    // Drive the handshake from the load event instead of only arming the
+    // timeout. In Firefox the embedded page posts its 'init' BEFORE the
+    // iframe's load event fires (init comes from a passive effect, while
+    // load waits for every subresource), so a connectFrame() started by
+    // onFrameInit used to be clobbered here by closeBridge(), leaving a
+    // dead bridge that failed after the timeout. connectFrame() is
+    // idempotent (it closeBridge()es first) and the storefront answers
+    // 'connect' whenever it arrives, so calling it here is safe whether
+    // init already came, comes later, or never comes.
+    if (portRef.current !== null) return
+    connectFrame()
+  }, [connectFrame])
 
   const reloadFrame = useCallback(() => {
     closeBridge()
